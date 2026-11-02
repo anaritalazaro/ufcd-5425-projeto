@@ -14,6 +14,7 @@ O Fornada · Sobra Zero é uma aplicação para planear e registar a produção 
 - Entrada e ajuste de stock das matérias-primas
 - Registo da produção de um lote, com consumo automático das matérias-primas
 - Fecho do dia com as quantidades vendidas e desperdiçadas
+
 **Fases seguintes, só depois de o núcleo estar a funcionar:**
  
 1. Plano do dia e cálculo antecipado das necessidades
