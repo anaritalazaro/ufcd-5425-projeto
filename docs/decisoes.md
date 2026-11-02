@@ -111,3 +111,21 @@ A sebenta usa SQLite, acedido com o módulo `sqlite3` incluído no Python, e lê
 
 Alternativas postas de lado: psycopg2 (versão anterior do driver) e SQLAlchemy (gera o SQL automaticamente e esconderia o SQL que é avaliado).
 
+## 7. Base de dados em Docker
+
+Nesta fase, o Docker corre só o PostgreSQL. A aplicação Flask corre diretamente no computador, com `python -m flask --app main run --debug`.
+
+**Versão.** O contentor usa o PostgreSQL 18, a versão instalada e usada na UFCD 10788, que o pgAdmin já suporta. A versão fica fixa no `docker-compose.yml`, para que todos os computadores usem a mesma, independentemente do PostgreSQL que tenham instalado.
+
+**Porta.** O contentor fica acessível na porta **5433** do computador. Dentro do contentor, o PostgreSQL usa a porta habitual, 5432; o Docker liga uma à outra.
+
+| Serviço | Onde corre | Porta no computador |
+| --- | --- | --- |
+| PostgreSQL do projeto (versão 18) | Contentor Docker | 5433 |
+| PostgreSQL local (de outras UFCD) | Serviço do Windows | 5432 |
+
+O computador de desenvolvimento já tem um PostgreSQL instalado como serviço do Windows, que arranca sozinho e ocupa a porta 5432 (confirmado com `netstat -ano`). A porta 5433 evita o conflito sem parar nem desinstalar esse serviço. Como o formador e os colegas também usaram o PostgreSQL na UFCD 10788, é provável que tenham o mesmo conflito, e a porta 5433 evita-o também nos seus computadores.
+
+Alternativa posta de lado: parar o serviço local antes de cada sessão. Obrigaria a mexer nos serviços do Windows, com permissões de administrador, e o conflito voltaria a cada reinício, porque o serviço arranca automaticamente.
+
+**Ligações.** A aplicação e o pgAdmin ligam-se a `localhost:5433`, com as credenciais do `.env` (`POSTGRES_PORT=5433`).
