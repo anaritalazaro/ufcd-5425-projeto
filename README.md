@@ -38,8 +38,10 @@ Em construção. As instruções de instalação e execução serão acrescentad
  
 - `docs/decisoes.md` — decisões de âmbito após a entrega inicial
 - `docs/modelo-er.png` — modelo E-R preliminar
+- `docs/entregas/` — sprints da UFCD 10790 e entrega inicial da UFCD 5425
 - `README.md` — descrição do projeto
 - `LOG.md` — registo de progresso por sessão
+
 
 ## Autoria
  
