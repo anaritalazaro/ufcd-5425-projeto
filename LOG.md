@@ -22,3 +22,4 @@
 - Correção do README
 - PR em rascunho
 - Realização da parte 2 da issue #1.
+- Entregas da UFCD 10790 (Sprints 1 e 2) e entrega inicial da UFCD 5425 adicionadas em `docs/entregas/` (PR #3)
