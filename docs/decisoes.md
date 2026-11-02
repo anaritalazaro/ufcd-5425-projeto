@@ -23,6 +23,7 @@ A primeira versão concentra-se num percurso pequeno e consistente:
 4. Autenticação, acesso por várias pessoas e perfis de utilizador
 5. Rejeição automática de lotes por temperatura
 6. Melhorias visuais (CSS)
+
 Durante a demonstração local, o utilizador é opcional nos registos. Passa a ser obrigatório na fase da autenticação.
  
 ## 2. Gestão de stock
@@ -95,3 +96,18 @@ A rejeição automática de lotes fica para uma fase posterior. Na fase das temp
 - lista as ocorrências, para consulta.
 
 O controlo das temperaturas de cozedura fica também como evolução futura.
+
+## 6. Dependências da aplicação
+
+As dependências estão em `requirements.txt`:
+
+| Biblioteca | Para que serve | Porquê esta |
+| --- | --- | --- |
+| `flask` | Framework web: recebe os pedidos e devolve as páginas | Stack validada pelo formador; leve, sem estrutura imposta, o que deixa as camadas visíveis |
+| `psycopg[binary]` | Driver que liga o Python ao PostgreSQL | Driver mais usado para PostgreSQL, com consultas parametrizadas; permite escrever o SQL à mão. A variante `binary` evita erros de compilação no Windows |
+| `python-dotenv` | Lê o ficheiro `.env` com as credenciais | O enunciado exige credenciais fora do código; o `config.py` lê-as depois com `os.getenv()` |
+
+A sebenta usa SQLite, acedido com o módulo `sqlite3` incluído no Python, e lê a configuração com `os.getenv()`. Como este projeto usa PostgreSQL e um ficheiro `.env`, foram precisos um driver para o PostgreSQL (psycopg) e uma biblioteca para ler o `.env` (python-dotenv).
+
+Alternativas postas de lado: psycopg2 (versão anterior do driver) e SQLAlchemy (gera o SQL automaticamente e esconderia o SQL que é avaliado).
+

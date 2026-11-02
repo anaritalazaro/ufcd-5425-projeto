@@ -16,3 +16,6 @@
 
 ## Sessão 3 — 30 de outubro de 2026
 - Issue #1 (parte 1): arranque da aplicação Flask, requirements.txt e .env.example
+
+## Sessão 4 — 2 de novembro de 2026
+- Justificação das dependências registada em `docs/decisoes.md` (secção 6)
