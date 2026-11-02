@@ -19,3 +19,6 @@
 
 ## Sessão 4 — 2 de novembro de 2026
 - Justificação das dependências registada em `docs/decisoes.md` (secção 6)
+- Correção do README
+- PR em rascunho
+- Realização da parte 2 da issue #1.

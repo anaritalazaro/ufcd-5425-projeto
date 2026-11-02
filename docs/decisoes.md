@@ -91,7 +91,7 @@ A ficha técnica de referência do pastel de nata admite conservação até 24 h
 A rejeição automática de lotes fica para uma fase posterior. Na fase das temperaturas, o sistema:
  
 - regista a temperatura de cada equipamento, com data, hora e turno;
-- assinala como **ocorrência** qualquer registo abaixo da temperatura mínima ou acima da máxima do equipamento (por exemplo, 2–8 °C numa câmara frigorífica, como indica a ficha técnica de referencia);
+- assinala como **ocorrência** qualquer registo abaixo da temperatura mínima ou acima da máxima do equipamento (por exemplo, 2–8 °C numa câmara frigorífica, como indica a ficha técnica de referência);
 - obriga a indicar a ação corretiva numa ocorrência;
 - lista as ocorrências, para consulta.
 
