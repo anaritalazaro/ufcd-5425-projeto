@@ -18,8 +18,10 @@
 - Issue #1 (parte 1): arranque da aplicação Flask, requirements.txt e .env.example
 
 ## Sessão 4 — 2 de novembro de 2026
+
+- Correção da formatação das funcionalidades no README
 - Justificação das dependências registada em `docs/decisoes.md` (secção 6)
-- Correção do README
-- PR em rascunho
-- Realização da parte 2 da issue #1.
+- PR #2 em rascunho ligado à issue #1; tarefas concluídas assinaladas na checklist (4 de 8)
 - Entregas da UFCD 10790 (Sprints 1 e 2) e entrega inicial da UFCD 5425 adicionadas em `docs/entregas/` (PR #3)
+- Início da parte 2 da issue #1: Docker Desktop instalado e verificado (WSL 2, `docker run hello-world`)
+- Conflito de porta com o PostgreSQL local (5432) resolvido: PostgreSQL 18 em Docker na porta 5433 (`docs/decisoes.md`, secção 7)
