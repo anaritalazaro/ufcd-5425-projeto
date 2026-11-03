@@ -1,6 +1,6 @@
 # Decisões do projeto
  
-Este documento regista as decisões tomadas depois da aprovação da entrega inicial, em resposta aos comentários do formador e validadas com o mesmo.
+Este documento regista as decisões tomadas depois da aprovação da entrega inicial: decisões de âmbito, em resposta aos comentários do formador e validadas com o mesmo (secções 1 a 5), e decisões técnicas do desenvolvimento (secções 6 e seguintes).
  
 ## 1. Prioridades da primeira versão
  
@@ -44,8 +44,9 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
  
 - uma entrada ou ajuste grava o movimento e atualiza o stock na mesma transação;
 - o registo de um lote cria o lote, grava os consumos e atualiza o stock na mesma transação. Se faltar stock de alguma matéria-prima, nada fica guardado.
+
 O stock inicial é registado como uma entrada.
- 
+
 ## 3. Receitas e quantidades
  
 As quantidades da receita são definidas **para uma quantidade-base de produção**, como numa ficha técnica. Cada produto tem um **rendimento do lote**: o número de unidades que a receita produz.
@@ -83,8 +84,7 @@ No fecho do dia, toda a quantidade produzida fica distribuída entre vendido e d
 - as quantidades vendida e desperdiçada não são negativas;
 - produzido = vendido + desperdiçado.
 
-Não há transição de produto para o dia seguinte. É uma política da casa: a pastelaria de fabrico próprio vende só no próprio dia. 
-A ficha técnica de referência do pastel de nata admite conservação até 24 h a 2–8 °C, por isso a transição de produtos ainda dentro da validade fica identificada como evolução futura deste projeto.
+Não há transição de produto para o dia seguinte. É uma política da casa: a pastelaria de fabrico próprio vende só no próprio dia. A ficha técnica de referência do pastel de nata admite conservação até 24 h a 2–8 °C, por isso a transição de produtos ainda dentro da validade fica identificada como evolução futura deste projeto.
  
 ## 5. Temperaturas
  
@@ -127,5 +127,11 @@ Nesta fase, o Docker corre só o PostgreSQL. A aplicação Flask corre diretamen
 O computador de desenvolvimento já tem um PostgreSQL instalado como serviço do Windows, que arranca sozinho e ocupa a porta 5432 (confirmado com `netstat -ano`). A porta 5433 evita o conflito sem parar nem desinstalar esse serviço. Como o formador e os colegas também usaram o PostgreSQL na UFCD 10788, é provável que tenham o mesmo conflito, e a porta 5433 evita-o também nos seus computadores.
 
 Alternativa posta de lado: parar o serviço local antes de cada sessão. Obrigaria a mexer nos serviços do Windows, com permissões de administrador, e o conflito voltaria a cada reinício, porque o serviço arranca automaticamente.
+
+A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`), e não em todos os endereços de rede, que é o comportamento por omissão do Docker. Assim, a base de dados não fica acessível a outros computadores da mesma rede (por exemplo, a rede Wi-Fi do centro de formação), independentemente da configuração da firewall de cada computador.
+
+**Dados.** Os dados ficam num volume com nome, `dados_postgres`, gerido pelo Docker fora da pasta do projeto: mantêm-se entre arranques e nunca chegam ao GitHub. O volume é montado em `/var/lib/postgresql`, o caminho indicado a partir do PostgreSQL 18; até à versão 17 era `/var/lib/postgresql/data`, que ainda aparece em muitos exemplos.
+
+**Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
 
 **Ligações.** A aplicação e o pgAdmin ligam-se a `localhost:5433`, com as credenciais do `.env` (`POSTGRES_PORT=5433`).
