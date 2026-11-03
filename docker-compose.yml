@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:18
+    container_name: fornada-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+       # Só no próprio computador (localhost), sem acesso a partir da rede
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - dados_postgres:/var/lib/postgresql
+
+volumes:
+  dados_postgres:
