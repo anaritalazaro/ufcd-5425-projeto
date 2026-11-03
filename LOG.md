@@ -25,3 +25,13 @@
 - Entregas da UFCD 10790 (Sprints 1 e 2) e entrega inicial da UFCD 5425 adicionadas em `docs/entregas/` (PR #3)
 - Início da parte 2 da issue #1: Docker Desktop instalado e verificado (WSL 2, `docker run hello-world`)
 - Conflito de porta com o PostgreSQL local (5432) resolvido: PostgreSQL 18 em Docker na porta 5433 (`docs/decisoes.md`, secção 7)
+
+
+## Sessão 5 — 3 de novembro de 2026 (fora da aula)
+
+- Criado o `.env` local a partir do `.env.example`, confirmado fora do Git (`git check-ignore -v .env`)
+- `docker-compose.yml` com o PostgreSQL 18, publicado só em `127.0.0.1:5433`, com os dados no volume `dados_postgres`
+- Ligação verificada com o `psql` dentro do contentor e com o pgAdmin em `localhost:5433`; sub-issue #5 fechada
+- Secção "Executar" do README escrita e testada a partir de uma base de dados vazia; problemas no arranque em `docs/resolucao-problemas.md`
+- Secção 7 de `docs/decisoes.md` completada (porta em `127.0.0.1`, volume e credenciais) e introdução atualizada
+- Pendente: ligação da aplicação à base de dados (#6); a sub-issue #7 fica aberta até esse passo entrar no README
