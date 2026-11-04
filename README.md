@@ -82,6 +82,16 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `docs/decisoes.md` — decisões de âmbito e decisões técnicas do projeto
 - `docs/resolucao-problemas.md` — resolução de problemas no arranque
 - `docs/modelo-er.png` — modelo E-R preliminar
+- `config.py` — configuração lida do ambiente (.env)
+- `database.py` — abertura da ligação ao PostgreSQL
+- `main.py` — create_app(): cria a aplicação Flask
+- `requirements.txt` — dependências Python
+- `.env.example`  — modelo das variáveis de ambiente (sem valores reais)
+- `domain/` — classes e regras do problema
+- `repositories/` —  acesso aos dados (SQL parametrizado)
+- `services/` — operações e transações
+- `web/`  — rotas Flask (blueprints)
+- `templates/` — páginas HTML (Jinja2)
 
 ## Autoria
  

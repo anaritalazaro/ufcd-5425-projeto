@@ -35,3 +35,8 @@
 - Secção "Executar" do README escrita e testada a partir de uma base de dados vazia; problemas no arranque em `docs/resolucao-problemas.md`
 - Secção 7 de `docs/decisoes.md` completada (porta em `127.0.0.1`, volume e credenciais) e introdução atualizada
 - Pendente: ligação da aplicação à base de dados (#6); a sub-issue #7 fica aberta até esse passo entrar no README
+
+## Sessão 6 — 4 de novembro de 2026 (fora da aula)
+
+- Licença alterada de MIT para "todos os direitos reservados"
+- Sub-issue #4: config.py lê as variáveis POSTGRES_* do .env com o python-dotenv; database.py abre a ligação com o psycopg; pacotes domain/, repositories/ e services/ criados
