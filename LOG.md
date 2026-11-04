@@ -41,3 +41,4 @@
 - Licença alterada de MIT para "todos os direitos reservados"
 - Sub-issue #4: config.py lê as variáveis POSTGRES_* do .env com o python-dotenv; database.py abre a ligação com o psycopg; pacotes domain/, repositories/ e services/ criados
 - Integração do main no branch e resolução do conflito no README
+- Sub-issue #6: página /estado verifica a ligação ao PostgreSQL (rota → serviço → repositório, como na sebenta); testada com o contentor a correr (200) e parado (503)
