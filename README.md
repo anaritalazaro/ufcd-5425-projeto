@@ -93,6 +93,7 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `web/`  — rotas Flask (blueprints)
 - `templates/` — páginas HTML (Jinja2)
 
+
 ## Autoria
  
 - Formanda: Ana Silva
