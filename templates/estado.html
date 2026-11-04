@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Estado · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Estado da ligação à base de dados</h1>
+  {% if erro %}
+    <p>{{ erro }}</p>
+  {% else %}
+    <p>Ligação ao PostgreSQL: OK</p>
+    <p>{{ versao }}</p>
+  {% endif %}
+</body>
+</html>
