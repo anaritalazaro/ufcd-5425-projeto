@@ -33,7 +33,7 @@ O Fornada · Sobra Zero é uma aplicação para planear e registar a produção 
 
 ## Executar
 
-Requisitos: [Docker Desktop](https://www.docker.com/products/docker-desktop/), Python 3 e Git. O pgAdmin 4 é opcional.
+Requisitos: [Docker Desktop](https://www.docker.com/products/docker-desktop/), Python 3.14 e Git. O pgAdmin 4 é opcional.
 
 Nesta fase, o Docker corre só a base de dados (PostgreSQL 18); a aplicação Flask corre no computador.
 
@@ -61,15 +61,15 @@ O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:
 **3. Arrancar a aplicação**
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 python -m flask --app main run --debug
 ```
 
-A aplicação fica em http://127.0.0.1:5000. A ligação à base de dados está em construção.
+A aplicação fica em <http://127.0.0.1:5000>. Para confirmar a ligação à base de dados, abre <http://127.0.0.1:5000/estado>: deve aparecer "Ligação ao PostgreSQL: OK" e a versão do PostgreSQL.
 
-**Parar:** `docker compose stop`. Não uses `docker compose down -v`, que apaga a base de dados.
+**Parar:** `Ctrl+C` no terminal do Flask e depois `docker compose stop`. Não uses `docker compose down -v`, que apaga a base de dados.
 
 Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
  
@@ -86,7 +86,6 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `database.py` — abertura da ligação ao PostgreSQL
 - `main.py` — create_app(): cria a aplicação Flask
 - `requirements.txt` — dependências Python
-- `.env.example`  — modelo das variáveis de ambiente (sem valores reais)
 - `domain/` — classes e regras do problema
 - `repositories/` —  acesso aos dados (SQL parametrizado)
 - `services/` — operações e transações
