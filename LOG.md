@@ -49,3 +49,4 @@
 - `.env.example` corrigido: a porta passou de 5432 para 5433, de acordo com o `decisoes.md`
 - README testado num clone novo, numa pasta à parte, com um volume e credenciais novos: a página `/estado` respondeu "OK" (PostgreSQL 18.6). 
 - O teste revelou que o README não explicava como preencher o `.env` e que, com o `.env` vazio, o contentor para sem aviso; README e `resolucao-problemas.md` corrigidos
+- Notas no `decisoes.md` sobre a estrutura do código, o nome real do volume e a página `/estado`
