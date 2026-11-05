@@ -42,3 +42,10 @@
 - Sub-issue #4: config.py lê as variáveis POSTGRES_* do .env com o python-dotenv; database.py abre a ligação com o psycopg; pacotes domain/, repositories/ e services/ criados
 - Integração do main no branch e resolução do conflito no README
 - Sub-issue #6: página /estado verifica a ligação ao PostgreSQL (rota → serviço → repositório, como na sebenta); testada com o contentor a correr (200) e parado (503)
+
+## Sessão 7 — 5 de novembro de 2026 (fora da aula)
+
+- Sub-issue #7: secção "Executar" do README atualizada (Python 3.14, `py -3.14`, `python -m pip`, verificação em `/estado`, `Ctrl+C` no "Parar")
+- `.env.example` corrigido: a porta passou de 5432 para 5433, de acordo com o `decisoes.md`
+- README testado num clone novo, numa pasta à parte, com um volume e credenciais novos: a página `/estado` respondeu "OK" (PostgreSQL 18.6). 
+- O teste revelou que o README não explicava como preencher o `.env` e que, com o `.env` vazio, o contentor para sem aviso; README e `resolucao-problemas.md` corrigidos
