@@ -23,3 +23,11 @@ A imagem do PostgreSQL só lê `POSTGRES_DB`, `POSTGRES_USER` e `POSTGRES_PASSWO
 docker compose down -v
 docker compose up -d
 ```
+
+### O contentor não aparece no `docker compose ps`
+
+O `docker compose up -d` indica "Started", mas o `docker compose ps` não mostra o `fornada-db`: o contentor arrancou e parou logo a seguir.
+
+Ver a causa com `docker compose logs db`. Se aparecer "Database is uninitialized and superuser password is not specified", o `POSTGRES_PASSWORD` do `.env` está vazio. Preencher o `.env`, gravá-lo, confirmar com `Get-Content .env` e voltar a correr `docker compose up -d`.
+
+Não usar `POSTGRES_HOST_AUTH_METHOD=trust`, que a mensagem sugere: permite ligações sem palavra-passe.
