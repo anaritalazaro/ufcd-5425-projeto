@@ -130,11 +130,29 @@ Alternativa posta de lado: parar o serviço local antes de cada sessão. Obrigar
 
 A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`), e não em todos os endereços de rede, que é o comportamento por omissão do Docker. Assim, a base de dados não fica acessível a outros computadores da mesma rede (por exemplo, a rede Wi-Fi do centro de formação), independentemente da configuração da firewall de cada computador.
 
-**Dados.** Os dados ficam num volume com nome, `dados_postgres`, gerido pelo Docker fora da pasta do projeto: mantêm-se entre arranques e nunca chegam ao GitHub. O volume é montado em `/var/lib/postgresql`, o caminho indicado a partir do PostgreSQL 18; até à versão 17 era `/var/lib/postgresql/data`, que ainda aparece em muitos exemplos.
+**Dados.** Os dados ficam num volume com nome, `dados_postgres` no `docker-compose.yml`. O Docker Compose junta-lhe o nome da pasta do projeto como prefixo, por isso o volume real chama-se `ufcd-5425-projeto_dados_postgres`; uma cópia do projeto noutra pasta usa um volume diferente. O volume é gerido pelo Docker fora da pasta do projeto: os dados mantêm-se entre arranques e nunca chegam ao GitHub. O volume é montado em `/var/lib/postgresql`, o caminho indicado a partir do PostgreSQL 18; até à versão 17 era `/var/lib/postgresql/data`, que ainda aparece em muitos exemplos.
+
+**Nome do contentor.** O contentor tem um nome fixo, `fornada-db` (`container_name` no `docker-compose.yml`). Por isso, só pode existir um de cada vez no mesmo computador: para arrancar uma cópia do projeto noutra pasta, é preciso remover primeiro o contentor da original com `docker compose down`, sem `-v`, o que mantém o volume.
 
 **Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
 
 **Ligações.** A aplicação e o pgAdmin ligam-se a `localhost:5433`, com as credenciais do `.env` (`POSTGRES_PORT=5433`).
 
 **Estrutura.** As pastas seguem as responsabilidades da sebenta da UFCD 5425 (secção 4.1), mas ficam na raiz do projeto, sem `src/`, e as dependências estão em `requirements.txt`. A organização das camadas é a mesma; a diferença está só na forma de instalar o projeto.
+
+## 8. Estrutura do código
+
+As pastas seguem as responsabilidades definidas na sebenta da UFCD 5425 (secção 4.1): `domain/` para os conceitos e regras do problema, `repositories/` para as consultas à base de dados, `services/` para a coordenação das operações, `web/` para a receção dos pedidos e `templates/` para as páginas.
+
+**Diferença na organização.** Na sebenta, o código fica dentro de um pacote em `src/` e é instalado com um `pyproject.toml` (secções 4 e 5). Neste projeto, as pastas ficam na raiz e as dependências estão no `requirements.txt`. A estrutura foi criada no arranque do projeto, e a mudança para `src/` não alteraria a separação das camadas; por isso, manteve-se.
+
+**Diferenças impostas pela stack.** A sebenta usa FastAPI e SQLite; este projeto usa Flask e PostgreSQL. A fábrica da aplicação chama-se `create_app()`, porque é o nome que o Flask encontra automaticamente. A configuração não tem valores por omissão: as variáveis `POSTGRES_*` são credenciais e têm de vir sempre do ambiente (na sebenta, a única variável é o caminho de um ficheiro SQLite).
+
+## 9. Verificação da ligação à base de dados
+
+A ligação é verificada na página `/estado`, que segue o percurso da sebenta (secções 8 a 10): a rota em `web/estado.py` abre uma ligação por pedido, chama o `SistemaService`, que usa o `SistemaRepository` para executar `SELECT version()`, e fecha a ligação no fim. Se a ligação falhar, o `database.py` converte o erro do psycopg na exceção própria `ErroLigacaoBD`; a página mostra uma mensagem genérica com o código 503, e o detalhe técnico fica registado no terminal.
+
+**Segurança.** A página mostra a versão do PostgreSQL a quem a abrir. Numa aplicação local e didática não há problema (sebenta, secção 19), mas na fase da segurança o acesso deve ser restringido ou a versão retirada.
+
+Alternativa posta de lado: um comando de terminal (`flask verificar-bd`). A sebenta usa rotas web, e a página serve também de passo de verificação no README.
 
