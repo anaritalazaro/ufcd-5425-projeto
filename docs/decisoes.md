@@ -1,6 +1,6 @@
 # Decisões do projeto
  
-Este documento regista as decisões tomadas depois da aprovação da entrega inicial, em resposta aos comentários do formador e validadas com o mesmo.
+Este documento regista as decisões tomadas depois da aprovação da entrega inicial: decisões de âmbito, em resposta aos comentários do formador e validadas com o mesmo (secções 1 a 5), e decisões técnicas do desenvolvimento (secções 6 e seguintes).
  
 ## 1. Prioridades da primeira versão
  
@@ -23,6 +23,7 @@ A primeira versão concentra-se num percurso pequeno e consistente:
 4. Autenticação, acesso por várias pessoas e perfis de utilizador
 5. Rejeição automática de lotes por temperatura
 6. Melhorias visuais (CSS)
+
 Durante a demonstração local, o utilizador é opcional nos registos. Passa a ser obrigatório na fase da autenticação.
  
 ## 2. Gestão de stock
@@ -43,8 +44,9 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
  
 - uma entrada ou ajuste grava o movimento e atualiza o stock na mesma transação;
 - o registo de um lote cria o lote, grava os consumos e atualiza o stock na mesma transação. Se faltar stock de alguma matéria-prima, nada fica guardado.
+
 O stock inicial é registado como uma entrada.
- 
+
 ## 3. Receitas e quantidades
  
 As quantidades da receita são definidas **para uma quantidade-base de produção**, como numa ficha técnica. Cada produto tem um **rendimento do lote**: o número de unidades que a receita produz.
@@ -82,16 +84,86 @@ No fecho do dia, toda a quantidade produzida fica distribuída entre vendido e d
 - as quantidades vendida e desperdiçada não são negativas;
 - produzido = vendido + desperdiçado.
 
-Não há transição de produto para o dia seguinte. É uma política da casa: a pastelaria de fabrico próprio vende só no próprio dia. 
-A ficha técnica de referência do pastel de nata admite conservação até 24 h a 2–8 °C, por isso a transição de produtos ainda dentro da validade fica identificada como evolução futura deste projeto.
+Não há transição de produto para o dia seguinte. É uma política da casa: a pastelaria de fabrico próprio vende só no próprio dia. A ficha técnica de referência do pastel de nata admite conservação até 24 h a 2–8 °C, por isso a transição de produtos ainda dentro da validade fica identificada como evolução futura deste projeto.
  
 ## 5. Temperaturas
  
 A rejeição automática de lotes fica para uma fase posterior. Na fase das temperaturas, o sistema:
  
 - regista a temperatura de cada equipamento, com data, hora e turno;
-- assinala como **ocorrência** qualquer registo abaixo da temperatura mínima ou acima da máxima do equipamento (por exemplo, 2–8 °C numa câmara frigorífica, como indica a ficha técnica de referencia);
+- assinala como **ocorrência** qualquer registo abaixo da temperatura mínima ou acima da máxima do equipamento (por exemplo, 2–8 °C numa câmara frigorífica, como indica a ficha técnica de referência);
 - obriga a indicar a ação corretiva numa ocorrência;
 - lista as ocorrências, para consulta.
 
 O controlo das temperaturas de cozedura fica também como evolução futura.
+
+## 6. Dependências da aplicação
+
+As dependências estão em `requirements.txt`:
+
+| Biblioteca | Para que serve | Porquê esta |
+| --- | --- | --- |
+| `flask` | Framework web: recebe os pedidos e devolve as páginas | Stack validada pelo formador; leve, sem estrutura imposta, o que deixa as camadas visíveis |
+| `psycopg[binary]` | Driver que liga o Python ao PostgreSQL | Driver mais usado para PostgreSQL, com consultas parametrizadas; permite escrever o SQL à mão. A variante `binary` evita erros de compilação no Windows |
+| `python-dotenv` | Lê o ficheiro `.env` com as credenciais | O enunciado exige credenciais fora do código; o `config.py` lê-as depois com `os.getenv()` |
+
+As versões estão fixadas (`==`), para que todas as instalações usem exatamente as versões testadas com o Python 3.14. A fixação foi sugerida pelo formador na revisão do PR #2; as versões são as do ambiente de desenvolvimento, verificadas numa instalação nova. As dependências continuam no `requirements.txt`, e não num `pyproject.toml` como na sebenta (secção 5); a razão está na secção 8.
+
+A sebenta usa SQLite, acedido com o módulo `sqlite3` incluído no Python, e lê a configuração com `os.getenv()`. Como este projeto usa PostgreSQL e um ficheiro `.env`, foram precisos um driver para o PostgreSQL (psycopg) e uma biblioteca para ler o `.env` (python-dotenv).
+
+Alternativas postas de lado: psycopg2 (versão anterior do driver) e SQLAlchemy (gera o SQL automaticamente e esconderia o SQL que é avaliado).
+
+## 7. Base de dados em Docker
+
+Nesta fase, o Docker corre só o PostgreSQL. A aplicação Flask corre diretamente no computador, com `python -m flask --app main run --debug`.
+
+**Versão.** O contentor usa o PostgreSQL 18, a versão instalada e usada na UFCD 10788, que o pgAdmin já suporta. A versão fica fixa no `docker-compose.yml`, para que todos os computadores usem a mesma, independentemente do PostgreSQL que tenham instalado.
+
+**Porta.** O contentor fica acessível na porta **5433** do computador. Dentro do contentor, o PostgreSQL usa a porta habitual, 5432; o Docker liga uma à outra.
+
+| Serviço | Onde corre | Porta no computador |
+| --- | --- | --- |
+| PostgreSQL do projeto (versão 18) | Contentor Docker | 5433 |
+| PostgreSQL local (de outras UFCD) | Serviço do Windows | 5432 |
+
+O computador de desenvolvimento já tem um PostgreSQL instalado como serviço do Windows, que arranca sozinho e ocupa a porta 5432 (confirmado com `netstat -ano`). A porta 5433 evita o conflito sem parar nem desinstalar esse serviço. Como o formador e os colegas também usaram o PostgreSQL na UFCD 10788, é provável que tenham o mesmo conflito, e a porta 5433 evita-o também nos seus computadores.
+
+Alternativa posta de lado: parar o serviço local antes de cada sessão. Obrigaria a mexer nos serviços do Windows, com permissões de administrador, e o conflito voltaria a cada reinício, porque o serviço arranca automaticamente.
+
+A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`), e não em todos os endereços de rede, que é o comportamento por omissão do Docker. Assim, a base de dados não fica acessível a outros computadores da mesma rede (por exemplo, a rede Wi-Fi do centro de formação), independentemente da configuração da firewall de cada computador.
+
+**Dados.** Os dados ficam num volume com nome, `dados_postgres` no `docker-compose.yml`. O Docker Compose junta-lhe o nome da pasta do projeto como prefixo, por isso o volume real chama-se `ufcd-5425-projeto_dados_postgres`; uma cópia do projeto noutra pasta usa um volume diferente. O volume é gerido pelo Docker fora da pasta do projeto: os dados mantêm-se entre arranques e nunca chegam ao GitHub. O volume é montado em `/var/lib/postgresql`, o caminho indicado a partir do PostgreSQL 18; até à versão 17 era `/var/lib/postgresql/data`, que ainda aparece em muitos exemplos.
+
+**Nome do contentor.** O contentor tem um nome fixo, `fornada-db` (`container_name` no `docker-compose.yml`). Por isso, só pode existir um de cada vez no mesmo computador: para arrancar uma cópia do projeto noutra pasta, é preciso remover primeiro o contentor da original com `docker compose down`, sem `-v`, o que mantém o volume.
+
+**Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
+
+**Ligações.** A aplicação e o pgAdmin ligam-se a `localhost:5433`, com as credenciais do `.env` (`POSTGRES_PORT=5433`).
+
+**Estrutura.** As pastas seguem as responsabilidades da sebenta da UFCD 5425 (secção 4.1), mas ficam na raiz do projeto, sem `src/`, e as dependências estão em `requirements.txt`. A organização das camadas é a mesma; a diferença está só na forma de instalar o projeto.
+
+## 8. Estrutura do código
+
+As pastas seguem as responsabilidades definidas na sebenta da UFCD 5425 (secção 4.1): `domain/` para os conceitos e regras do problema, `repositories/` para as consultas à base de dados, `services/` para a coordenação das operações, `web/` para a receção dos pedidos e `templates/` para as páginas.
+
+**Diferença na organização.** Na sebenta, o código fica dentro de um pacote em `src/` e é instalado com um `pyproject.toml` (secções 4 e 5). Neste projeto, as pastas ficam na raiz e as dependências estão no `requirements.txt`. A estrutura foi criada no arranque do projeto, e a mudança para `src/` não alteraria a separação das camadas; por isso, manteve-se.
+
+**Diferenças impostas pela stack.** A sebenta usa FastAPI e SQLite; este projeto usa Flask e PostgreSQL. A fábrica da aplicação chama-se `create_app()`, porque é o nome que o Flask encontra automaticamente. A configuração não tem valores por omissão: as variáveis `POSTGRES_*` são credenciais e têm de vir sempre do ambiente (na sebenta, a única variável é o caminho de um ficheiro SQLite).
+
+## 9. Verificação da ligação à base de dados
+
+A ligação é verificada na página `/estado`, que segue o percurso da sebenta (secções 8 a 10): a rota em `web/estado.py` abre uma ligação por pedido, chama o `SistemaService`, que usa o `SistemaRepository` para executar `SELECT version()`, e fecha a ligação no fim. Se a ligação falhar, o `database.py` converte o erro do psycopg na exceção própria `ErroLigacaoBD`; a página mostra uma mensagem genérica com o código 503, e o detalhe técnico fica registado no terminal.
+
+**Segurança.** A página mostra a versão do PostgreSQL a quem a abrir. Numa aplicação local e didática não há problema (sebenta, secção 19), mas na fase da segurança o acesso deve ser restringido ou a versão retirada.
+
+Alternativa posta de lado: um comando de terminal (`flask verificar-bd`). A sebenta usa rotas web, e a página serve também de passo de verificação no README.
+
+## 10. Evolução futura
+
+Sugestões da revisão do PR #2 que ficam registadas para mais tarde. A issue #1 pedia para não criar módulos antes de serem precisos, e a página `/estado` já tem revisão prevista na fase da segurança (secção 9).
+
+**Pool de ligações.** Hoje, cada pedido abre e fecha uma ligação com `abrir_ligacao()`, como na sebenta (secção 10.2). Quando o número de pedidos o justificar, as ligações podem passar a vir de um pool, `ConnectionPool` do pacote `psycopg-pool` (instalado com `psycopg[binary,pool]`), criado uma vez no `create_app()`.
+
+**Ciclo de vida das ligações.** Com o pool, o `main.py` passa a registar uma função com `teardown_appcontext`, que corre no fim de cada pedido e devolve ao pool a ligação usada. O pool em si fecha-se quando a aplicação termina.
+
+**Resposta em JSON na página `/estado`.** Para verificações automáticas (por exemplo, um healthcheck quando a aplicação correr em Docker), a página pode devolver JSON quando o pedido tiver `Accept: application/json`, com o código 200 ou 503. A resposta JSON não deve incluir a versão do PostgreSQL (secção 9).
