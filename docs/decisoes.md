@@ -107,6 +107,8 @@ As dependências estão em `requirements.txt`:
 | `psycopg[binary]` | Driver que liga o Python ao PostgreSQL | Driver mais usado para PostgreSQL, com consultas parametrizadas; permite escrever o SQL à mão. A variante `binary` evita erros de compilação no Windows |
 | `python-dotenv` | Lê o ficheiro `.env` com as credenciais | O enunciado exige credenciais fora do código; o `config.py` lê-as depois com `os.getenv()` |
 
+As versões estão fixadas (`==`), para que todas as instalações usem exatamente as versões testadas com o Python 3.14. A fixação foi sugerida pelo formador na revisão do PR #2; as versões são as do ambiente de desenvolvimento, verificadas numa instalação nova. As dependências continuam no `requirements.txt`, e não num `pyproject.toml` como na sebenta (secção 5); a razão está na secção 8.
+
 A sebenta usa SQLite, acedido com o módulo `sqlite3` incluído no Python, e lê a configuração com `os.getenv()`. Como este projeto usa PostgreSQL e um ficheiro `.env`, foram precisos um driver para o PostgreSQL (psycopg) e uma biblioteca para ler o `.env` (python-dotenv).
 
 Alternativas postas de lado: psycopg2 (versão anterior do driver) e SQLAlchemy (gera o SQL automaticamente e esconderia o SQL que é avaliado).
@@ -156,3 +158,12 @@ A ligação é verificada na página `/estado`, que segue o percurso da sebenta 
 
 Alternativa posta de lado: um comando de terminal (`flask verificar-bd`). A sebenta usa rotas web, e a página serve também de passo de verificação no README.
 
+## 10. Evolução futura
+
+Sugestões da revisão do PR #2 que ficam registadas para mais tarde. A issue #1 pedia para não criar módulos antes de serem precisos, e a página `/estado` já tem revisão prevista na fase da segurança (secção 9).
+
+**Pool de ligações.** Hoje, cada pedido abre e fecha uma ligação com `abrir_ligacao()`, como na sebenta (secção 10.2). Quando o número de pedidos o justificar, as ligações podem passar a vir de um pool, `ConnectionPool` do pacote `psycopg-pool` (instalado com `psycopg[binary,pool]`), criado uma vez no `create_app()`.
+
+**Ciclo de vida das ligações.** Com o pool, o `main.py` passa a registar uma função com `teardown_appcontext`, que corre no fim de cada pedido e devolve ao pool a ligação usada. O pool em si fecha-se quando a aplicação termina.
+
+**Resposta em JSON na página `/estado`.** Para verificações automáticas (por exemplo, um healthcheck quando a aplicação correr em Docker), a página pode devolver JSON quando o pedido tiver `Accept: application/json`, com o código 200 ou 503. A resposta JSON não deve incluir a versão do PostgreSQL (secção 9).
