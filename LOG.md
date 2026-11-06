@@ -16,6 +16,7 @@
 
 ## Sessão 3 — 30 de outubro de 2026
 - Issue #1 (parte 1): arranque da aplicação Flask, requirements.txt e .env.example
+- Nota: Sprint 2 foi submetido na UFCD 10790 a 30/10
 
 ## Sessão 4 — 2 de novembro de 2026
 
@@ -42,6 +43,7 @@
 - Sub-issue #4: config.py lê as variáveis POSTGRES_* do .env com o python-dotenv; database.py abre a ligação com o psycopg; pacotes domain/, repositories/ e services/ criados
 - Integração do main no branch e resolução do conflito no README
 - Sub-issue #6: página /estado verifica a ligação ao PostgreSQL (rota → serviço → repositório, como na sebenta); testada com o contentor a correr (200) e parado (503)
+- Nota: Sprint 3 foi submetido na UFCD 10790 a 04/11 (por validar pelo formador)
 
 ## Sessão 7 — 5 de novembro de 2026 (fora da aula)
 
@@ -50,3 +52,11 @@
 - README testado num clone novo, numa pasta à parte, com um volume e credenciais novos: a página `/estado` respondeu "OK" (PostgreSQL 18.6). 
 - O teste revelou que o README não explicava como preencher o `.env` e que, com o `.env` vazio, o contentor para sem aviso; README e `resolucao-problemas.md` corrigidos
 - Notas no `decisoes.md` sobre a estrutura do código, o nome real do volume e a página `/estado`
+
+## Sessão 8 — 6 de novembro de 2026
+
+- Revisão do PR #2 pelo formador: aprovado, com sugestões não bloqueadoras
+- `requirements.txt` com as versões fixadas (Flask 3.1.3, psycopg[binary] 3.3.6, python-dotenv 1.2.4), verificadas numa instalação nova com o Python 3.14.6
+- `docs/decisoes.md`: secção 6 com a fixação das versões e nova secção 10 com a evolução futura (pool de ligações, ciclo de vida das ligações, JSON em `/estado`)
+- `load_dotenv()` mantido dentro de `do_ambiente()`, seguindo a sebenta (secções 7.1 e 13)
+- Sprint 3 da UFCD 10790 acrescentado a `docs/entregas/`
