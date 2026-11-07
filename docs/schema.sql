@@ -43,7 +43,9 @@ CREATE TABLE IF NOT EXISTS produto (
 	validade_horas INTEGER NOT NULL 
 		CONSTRAINT ck_produto_validade_horas
 			CHECK(validade_horas > 0),                                   -- [DD] RN08
-	conservacao VARCHAR(10) NOT NULL,
+	conservacao VARCHAR(20) NOT NULL
+		CONSTRAINT ck_produto_conservacao
+			CHECK (conservacao IN ('ambiente', 'refrigerado', 'congelado')),    -- [Prop]
 	ativo BOOLEAN NOT NULL DEFAULT true,                                 -- [DD] RN11
 	rendimento_lote INTEGER NOT NULL 
 		CONSTRAINT ck_produto_rendimento_lote
@@ -64,9 +66,9 @@ CREATE TABLE IF NOT EXISTS materia_prima (
 	stock_minimo DECIMAL(12,3) NOT NULL DEFAULT 0 
 		CONSTRAINT ck_materia_prima_stock_minimo
 			CHECK(stock_minimo >= 0),                                    -- [DD]
-	custo_unitario DECIMAL(10,4) NOT NULL
+	custo_unitario DECIMAL(12,6) NOT NULL
 		CONSTRAINT ck_materia_prima_custo_unitario
-			CHECK (custo_unitario >= 0),                                 -- [DD] RN01
+			CHECK (custo_unitario >= 0),                                 -- [DD] RN01; precisão (12,6) [Prop]
 	alergenios TEXT,
 	ativo BOOLEAN NOT NULL DEFAULT true                                  -- [DD] RN11
 );
