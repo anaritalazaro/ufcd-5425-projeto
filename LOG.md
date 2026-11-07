@@ -60,3 +60,11 @@
 - `docs/decisoes.md`: secção 6 com a fixação das versões e nova secção 10 com a evolução futura (pool de ligações, ciclo de vida das ligações, JSON em `/estado`)
 - `load_dotenv()` mantido dentro de `do_ambiente()`, seguindo a sebenta (secções 7.1 e 13)
 - Sprint 3 da UFCD 10790 acrescentado a `docs/entregas/`
+
+## Sessão 9 — 6 e 7 de novembro de 2026 (fora da aula)
+
+- Sub-issue #13: restrições do `docs/schema.sql` completadas a partir do dicionário de dados (UFCD 10790, Sprint 3): CHECK de valores permitidos, quantidades e regras condicionais do `movimento_stock`, regra do fecho do dia, `nome` único no equipamento e `ON DELETE RESTRICT` nas chaves estrangeiras; origem de cada restrição indicada no ficheiro
+- Corrigidos dois erros herdados do export do drawDB: UNIQUE isolado em `id_materia_prima` e `id_lote` (passa a UNIQUE composto) e `DEFAULT 0` nas quantidades do lote
+- `custo_unitario` (DECIMAL(12,6)) e `conservacao` (VARCHAR(20), com lista fixa de valores) ajustados a valores reais, a pensar nos dados de demonstração
+- Restrições testadas no PostgreSQL 18 com casos tirados dos critérios de aceitação do Sprint 3
+- Decisões registadas em `docs/decisoes.md` (secção 11)
