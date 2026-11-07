@@ -167,3 +167,26 @@ Sugestões da revisão do PR #2 que ficam registadas para mais tarde. A issue #1
 **Ciclo de vida das ligações.** Com o pool, o `main.py` passa a registar uma função com `teardown_appcontext`, que corre no fim de cada pedido e devolve ao pool a ligação usada. O pool em si fecha-se quando a aplicação termina.
 
 **Resposta em JSON na página `/estado`.** Para verificações automáticas (por exemplo, um healthcheck quando a aplicação correr em Docker), a página pode devolver JSON quando o pedido tiver `Accept: application/json`, com o código 200 ou 503. A resposta JSON não deve incluir a versão do PostgreSQL (secção 9).
+
+## 11. Restrições do schema.sql
+
+O `docs/schema.sql` completa o modelo E-R v.1 com as restrições do dicionário de dados (UFCD 10790, Sprint 3, secção 2.3). A origem de cada restrição está indicada no próprio ficheiro.
+
+**Fonte do modelo.** A partir da sub-issue #13, o `docs/schema.sql` é a fonte do modelo de dados; o drawDB serve só para o diagrama. O export do v.1 tinha perdido duas correções (UNIQUE isolado em `id_materia_prima` e `id_lote`, e `DEFAULT 0` nas quantidades do lote), e um novo export por cima do ficheiro voltaria a introduzi-las.
+
+**Decisões:**
+
+- Turnos guardados como `manhã` e `tarde`, com acento, como no dicionário de dados e no diagrama de classes. A base de dados usa UTF-8. Na aplicação, o turno vem sempre de uma lista fixa e nunca de texto livre, para garantir que o valor enviado é exatamente o que o CHECK aceita.
+- Quantidade dos movimentos: positiva na entrada e no consumo (o tipo indica o sentido) e diferente de 0 no ajuste, como no dicionário de dados.
+- Restrições com nome (`ck_...`, `fk_...`, `uq_...`), para que o repositório identifique a regra violada e traduza o erro (sebenta da UFCD 5425, secção 9.3).
+- Chaves estrangeiras com `ON DELETE RESTRICT`: nada com histórico se apaga (RN11), e a base de dados recusa de imediato apagar um registo usado noutra tabela.
+- Chaves estrangeiras dentro do `CREATE TABLE`, com `IF NOT EXISTS` (sebenta da UFCD 5425, secção 7.3): o script pode correr mais do que uma vez sem erro.
+- Validade do lote: pretende-se que o cálculo exato seja feito no Python, em `Lote.calcularValidade()`. A base de dados só verifica que a validade fica depois da produção (`ck_lote_validade`), para apanhar um erro de cálculo. Esta verificação é uma proposta (não está no dicionário de dados).
+- Regras a verificar no Python e não na base de dados, porque um CHECK só vê a linha que está a ser gravada e não consegue consultar outras tabelas:
+  - se uma leitura de temperatura está fora dos limites do equipamento;
+  - a validade exata do lote, que depende das horas de validade do produto;
+  - a diferença de um ajuste, que depende do stock atual;
+  - se há stock suficiente para produzir um lote.
+- Quantidades inteiras: as colunas INTEGER arredondam um valor decimal sem dar erro (60,5 passa a 60 ou 61). Por isso, o Python deve verificar que a quantidade produzida é um número inteiro antes de gravar, como previsto nas condições do RF04.
+- `custo_unitario` em DECIMAL(12,6), em vez do DECIMAL(10,4) do dicionário de dados: o custo é guardado por grama, mililitro ou unidade, e com 4 casas decimais os custos mais baixos ficavam arredondados (o sal a 0,00035 €/g seria guardado como 0,0004 €/g, um erro de 14 %). Com 6 casas, o custo do desperdício em euros é calculado com rigor.
+- `conservacao` em VARCHAR(20), em vez do VARCHAR(10) do dicionário de dados, com uma lista fixa de valores: `ambiente`, `refrigerado` e `congelado`. Com 10 caracteres, "refrigerado" não cabia.
