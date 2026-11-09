@@ -79,7 +79,7 @@ A aplicação fica em <http://127.0.0.1:5000>. Para confirmar a ligação à bas
 
 **Parar:** `Ctrl+C` no terminal do Flask e depois `docker compose stop`. Não uses `docker compose down -v`, que apaga a base de dados.
 
-Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
+Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
  
 ## Estrutura dos ficheiros
  
@@ -90,6 +90,7 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `docs/decisoes.md` — decisões de âmbito e decisões técnicas do projeto
 - `docs/resolucao-problemas.md` — resolução de problemas do ambiente
 - `docs/modelo-er.png` — modelo E-R da base de dados (8 tabelas), gerado no pgAdmin a partir das tabelas criadas pelo `docs/schema.sql`
+- `docs/schema.sql` — script de criação da base de dados (8 tabelas, com as restrições)
 - `config.py` — configuração lida do ambiente (.env)
 - `database.py` — abertura da ligação ao PostgreSQL
 - `main.py` — create_app(): cria a aplicação Flask
