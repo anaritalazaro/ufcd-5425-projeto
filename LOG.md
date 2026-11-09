@@ -68,3 +68,12 @@
 - `custo_unitario` (DECIMAL(12,6)) e `conservacao` (VARCHAR(20), com lista fixa de valores) ajustados a valores reais, a pensar nos dados de demonstração
 - Restrições testadas no PostgreSQL 18 com casos tirados dos critérios de aceitação do Sprint 3
 - Decisões registadas em `docs/decisoes.md` (secção 11)
+
+
+## Sessão 10 — 9 de novembro de 2026
+
+- #14: `docs/schema.sql` montado em `/docker-entrypoint-initdb.d/01-schema.sql`, só de leitura (commit c39dc68)
+- #15: teste de raiz com `docker compose down -v` (sem dados reais): oito `CREATE TABLE` nos *logs*, oito tabelas no `\dt` e no pgAdmin
+- #16: secção 12 de `docs/decisoes.md`; README com a criação das tabelas no primeiro arranque e o que fazer quando o `schema.sql` muda; novo problema em `docs/resolucao-problemas.md`
+- Sub-issues #14 a #16 fechadas; #12 com 4/4, a aguardar a integração do PR #17
+- Docker Desktop: versão atual 4.97.0 (Docker Engine 29.9.2, Compose v5.6.1); a 4.98.0 está disponível e exige o WSL 3.0.3 ou posterior (instalado: 3.0.3.0). Não foi instalada durante a aula, porque pode pedir para reiniciar. Decidido atualizar fora da aula; a partir de 20/11, sem atualizações até à defesa (27/11)
