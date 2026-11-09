@@ -42,3 +42,9 @@ docker compose logs db
 
 - Com uma linha `ERROR` a seguir a "running /docker-entrypoint-initdb.d/01-schema.sql": o script falhou a meio. Corrige-o e recria a base de dados com `docker compose down -v` e `docker compose up -d`.
 - Com "Skipping initialization": o volume já existia, e o script não correu. Recria a base de dados da mesma forma, sabendo que se perdem os dados.
+
+## O PNG exportado do diagrama E-R não mostra as relações
+
+O botão **Download image** do diagrama E-R do pgAdmin exporta as tabelas, mas não as linhas das relações (ficam só os pontos junto às colunas). É um erro conhecido do pgAdmin.
+
+Faz uma captura do diagrama: maximiza a janela, recolhe o Object Explorer, carrega em **Zoom to fit** e usa `Windows + Shift + S`. Recorta só a área do diagrama, sem a barra de cima, que mostra o nome da base de dados e do utilizador.

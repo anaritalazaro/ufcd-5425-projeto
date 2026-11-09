@@ -88,8 +88,8 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `docker-compose.yml` — base de dados PostgreSQL em Docker
 - `.env.example` — modelo das variáveis de configuração, sem valores reais
 - `docs/decisoes.md` — decisões de âmbito e decisões técnicas do projeto
-- `docs/resolucao-problemas.md` — resolução de problemas no arranque
-- `docs/modelo-er.png` — modelo E-R preliminar
+- `docs/resolucao-problemas.md` — resolução de problemas do ambiente
+- `docs/modelo-er.png` — modelo E-R da base de dados (8 tabelas), gerado no pgAdmin a partir das tabelas criadas pelo `docs/schema.sql`
 - `config.py` — configuração lida do ambiente (.env)
 - `database.py` — abertura da ligação ao PostgreSQL
 - `main.py` — create_app(): cria a aplicação Flask

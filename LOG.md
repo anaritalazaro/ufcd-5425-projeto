@@ -85,3 +85,4 @@
 - Contentor parado com `docker compose stop` antes da atualização
 - Depois da atualização, o `docker compose up -d` recriou o contentor `fornada-db`; os registos (`docker compose logs db`) confirmam que o volume foi mantido ("Skipping initialization")
 - Verificação: 8 tabelas no pgAdmin e página `/estado` com "OK" (PostgreSQL 18.6)
+- #18: diagrama E-R gerado no pgAdmin (ERD For Database) a partir da base de dados, em substituição do `docs/modelo-er.png`; a exportação de imagem do pgAdmin perde as linhas das relações, por isso a imagem é uma captura do diagrama (`docs/resolucao-problemas.md`)
