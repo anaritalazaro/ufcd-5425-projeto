@@ -190,3 +190,15 @@ O `docs/schema.sql` completa o modelo E-R v.1 com as restrições do dicionário
 - Quantidades inteiras: as colunas INTEGER arredondam um valor decimal sem dar erro (60,5 passa a 60 ou 61). Por isso, o Python deve verificar que a quantidade produzida é um número inteiro antes de gravar, como previsto nas condições do RF04.
 - `custo_unitario` em DECIMAL(12,6), em vez do DECIMAL(10,4) do dicionário de dados: o custo é guardado por grama, mililitro ou unidade, e com 4 casas decimais os custos mais baixos ficavam arredondados (o sal a 0,00035 €/g seria guardado como 0,0004 €/g, um erro de 14 %). Com 6 casas, o custo do desperdício em euros é calculado com rigor.
 - `conservacao` em VARCHAR(20), em vez do VARCHAR(10) do dicionário de dados, com uma lista fixa de valores: `ambiente`, `refrigerado` e `congelado`. Com 10 caracteres, "refrigerado" não cabia.
+
+## 12. Criação das tabelas no primeiro arranque
+
+O `docs/schema.sql` é montado no contentor em `/docker-entrypoint-initdb.d/01-schema.sql`, só de leitura (`:ro`). No primeiro arranque, com o volume vazio, a imagem do PostgreSQL cria a base de dados e o utilizador do `.env` e corre os scripts dessa pasta, por ordem alfabética, dentro dessa base de dados. As tabelas ficam criadas sem passos manuais, da mesma forma em qualquer computador.
+
+**Só no primeiro arranque.** Se o volume já tiver dados, a imagem salta a inicialização e os scripts não correm. Uma alteração ao `schema.sql` só chega à base de dados recriando o volume (`docker compose down -v` e `docker compose up -d`), o que apaga todos os dados. Enquanto não há dados reais, é a forma mais simples de manter a base de dados igual ao script.
+
+**Script preparado para o arranque automático.** O script não contém `CREATE DATABASE` nem `\c`: corre dentro da base de dados indicada em `POSTGRES_DB`. Se der erro, a inicialização para a meio, mas o volume fica criado; por isso, depois de corrigir o script, é preciso recriar o volume.
+
+Alternativa posta de lado: correr o `schema.sql` à mão no pgAdmin, depois de cada arranque com a base de dados vazia. É um passo manual, fácil de esquecer, e cada pessoa que executa o projeto teria de o fazer.
+
+Evolução futura: quando houver dados reais, as alterações à estrutura passam a ser feitas com scripts de alteração (`ALTER TABLE`), em vez de recriar o volume.

@@ -24,10 +24,21 @@ docker compose down -v
 docker compose up -d
 ```
 
-### O contentor não aparece no `docker compose ps`
+## O contentor não aparece no `docker compose ps`
 
 O `docker compose up -d` indica "Started", mas o `docker compose ps` não mostra o `fornada-db`: o contentor arrancou e parou logo a seguir.
 
-Ver a causa com `docker compose logs db`. Se aparecer "Database is uninitialized and superuser password is not specified", o `POSTGRES_PASSWORD` do `.env` está vazio. Preencher o `.env`, gravá-lo, confirmar com `Get-Content .env` e voltar a correr `docker compose up -d`.
+Vê a causa com `docker compose logs db`. Se aparecer "Database is uninitialized and superuser password is not specified", o `POSTGRES_PASSWORD` do `.env` está vazio. Preenche o `.env`, grava-o, confirma com `Get-Content .env` e volta a correr `docker compose up -d`.
 
-Não usar `POSTGRES_HOST_AUTH_METHOD=trust`, que a mensagem sugere: permite ligações sem palavra-passe.
+Não uses `POSTGRES_HOST_AUTH_METHOD=trust`, que a mensagem sugere: permite ligações sem palavra-passe.
+
+## Tabelas em falta depois do arranque
+
+O `schema.sql` só corre com o volume vazio. Vê os *logs*:
+
+```powershell
+docker compose logs db
+```
+
+- Com uma linha `ERROR` a seguir a "running /docker-entrypoint-initdb.d/01-schema.sql": o script falhou a meio. Corrige-o e recria a base de dados com `docker compose down -v` e `docker compose up -d`.
+- Com "Skipping initialization": o volume já existia, e o script não correu. Recria a base de dados da mesma forma, sabendo que se perdem os dados.

@@ -56,7 +56,15 @@ docker compose up -d
 docker compose ps
 ```
 
-O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No pgAdmin, liga-te a `localhost`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar.
+O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No primeiro arranque, as tabelas são criadas automaticamente a partir do `docs/schema.sql`. No pgAdmin, liga-te a `localhost`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar; outra é um erro no `schema.sql`.
+
+
+**Quando o `docs/schema.sql` muda:** o script só corre com a base de dados vazia. Para aplicar a nova versão, recria a base de dados. **Apaga todos os dados:**
+
+```powershell
+docker compose down -v
+docker compose up -d
+```
 
 **3. Arrancar a aplicação**
 
