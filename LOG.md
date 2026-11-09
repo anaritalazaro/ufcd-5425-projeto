@@ -77,3 +77,11 @@
 - #16: secção 12 de `docs/decisoes.md`; README com a criação das tabelas no primeiro arranque e o que fazer quando o `schema.sql` muda; novo problema em `docs/resolucao-problemas.md`
 - Sub-issues #14 a #16 fechadas; #12 com 4/4, a aguardar a integração do PR #17
 - Docker Desktop: versão atual 4.97.0 (Docker Engine 29.9.2, Compose v5.6.1); a 4.98.0 está disponível e exige o WSL 3.0.3 ou posterior (instalado: 3.0.3.0). Não foi instalada durante a aula, porque pode pedir para reiniciar. Decidido atualizar fora da aula; a partir de 20/11, sem atualizações até à defesa (27/11)
+
+## Sessão 11 — 9 de novembro de 2026 (fora da aula)
+
+- Docker Desktop atualizado de 4.97.0 para 4.99.0: Engine e cliente de 29.9.2 para 29.9.3, Compose de v5.6.1 para v5.7.0
+- A versão 4.98.0 prevista foi ultrapassada pela 4.99.0, lançada no próprio dia; instalada depois de rever as notas de lançamento, por incluir a correção de segurança do WSL 2 (da 4.98.0) e a correção da corrupção dos dados do Engine quando o Windows Update desliga o Docker Desktop
+- Contentor parado com `docker compose stop` antes da atualização
+- Depois da atualização, o `docker compose up -d` recriou o contentor `fornada-db`; os registos (`docker compose logs db`) confirmam que o volume foi mantido ("Skipping initialization")
+- Verificação: 8 tabelas no pgAdmin e página `/estado` com "OK" (PostgreSQL 18.6)
