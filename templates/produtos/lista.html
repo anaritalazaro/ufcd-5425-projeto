@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Produtos · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Produtos</h1>
+  {% if erro %}<p><strong>{{ erro }}</strong></p>{% endif %}
+  <p><a href="{{ url_for('produtos.novo') }}">Novo produto</a></p>
+  {% if produtos %}
+  <table>
+    <tr>
+      <th>Nome</th><th>Categoria</th><th>Preço (€)</th><th>Validade (h)</th>
+      <th>Conservação</th><th>Rendimento do lote</th><th>Ativo</th>
+    </tr>
+    {% for produto in produtos %}
+    <tr>
+      <td>{{ produto.nome }}</td>
+      <td>{{ produto.categoria }}</td>
+      <td>{{ produto.preco_venda }}</td>
+      <td>{{ produto.validade_horas }}</td>
+      <td>{{ produto.conservacao }}</td>
+      <td>{{ produto.rendimento_lote }}</td>
+      <td>{{ "Sim" if produto.ativo else "Não" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% elif not erro %}
+  <p>Ainda não há produtos.</p>
+  {% endif %}
+</body>
+</html>
