@@ -8,6 +8,11 @@ CENTIMO = Decimal("0.01")
 class DadosProdutoInvalidos(ValueError):
     """Um dado do produto tem um valor inválido."""
 
+class NomeProdutoDuplicado(DadosProdutoInvalidos):
+    """Já existe um produto com este nome (RN01)."""
+
+    def __init__(self, nome: str):
+        super().__init__(f"Já existe um produto com o nome «{nome}».")
 
 def _texto(valor, campo: str, maximo: int) -> str:
     if type(valor) is not str:
