@@ -86,3 +86,13 @@
 - Depois da atualização, o `docker compose up -d` recriou o contentor `fornada-db`; os registos (`docker compose logs db`) confirmam que o volume foi mantido ("Skipping initialization")
 - Verificação: 8 tabelas no pgAdmin e página `/estado` com "OK" (PostgreSQL 18.6)
 - #18: diagrama E-R gerado no pgAdmin (ERD For Database) a partir da base de dados, em substituição do `docs/modelo-er.png`; a exportação de imagem do pgAdmin perde as linhas das relações, por isso a imagem é uma captura do diagrama (`docs/resolucao-problemas.md`)
+
+## Sessão 12 — 13 de novembro de 2026
+
+- Issue #19 (RF01): branch `feature/produtos` criado a partir do `feature/schema-sql`; desenho da classe `Produto` decidido (setters com validação, `TypeError` e `ValueError`, nome único no serviço e no `UNIQUE`)
+- A classe recusa uma categoria vazia, mas o `schema.sql` aceita-a; correção (`CHECK`) adiada para depois da revisão do PR #17 e registada na secção 13 do `decisoes.md` (gravada na Sessão 13)
+
+## Sessão 13 — 16 de novembro de 2026
+
+- Produtos (RF01, #19): classe `Produto` com testes pytest (#20), `ProdutoRepository` com listar e criar (#21) e `ProdutoService` com o nome único (#22); PR #24 em rascunho
+- Ligação ao PostgreSQL com `autocommit=True`, para o serviço controlar as transações; páginas (#23) para a próxima sessão
