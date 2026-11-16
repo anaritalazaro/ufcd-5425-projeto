@@ -56,7 +56,15 @@ docker compose up -d
 docker compose ps
 ```
 
-O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No pgAdmin, liga-te a `localhost`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar.
+O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No primeiro arranque, as tabelas são criadas automaticamente a partir do `docs/schema.sql`. No pgAdmin, liga-te a `localhost`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar; outra é um erro no `schema.sql`.
+
+
+**Quando o `docs/schema.sql` muda:** o script só corre com a base de dados vazia. Para aplicar a nova versão, recria a base de dados. **Apaga todos os dados:**
+
+```powershell
+docker compose down -v
+docker compose up -d
+```
 
 **3. Arrancar a aplicação**
 
@@ -71,7 +79,7 @@ A aplicação fica em <http://127.0.0.1:5000>. Para confirmar a ligação à bas
 
 **Parar:** `Ctrl+C` no terminal do Flask e depois `docker compose stop`. Não uses `docker compose down -v`, que apaga a base de dados.
 
-Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
+Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
  
 ## Estrutura dos ficheiros
  
@@ -80,8 +88,9 @@ Problemas no arranque: ver [docs/resolucao-problemas.md](docs/resolucao-problema
 - `docker-compose.yml` — base de dados PostgreSQL em Docker
 - `.env.example` — modelo das variáveis de configuração, sem valores reais
 - `docs/decisoes.md` — decisões de âmbito e decisões técnicas do projeto
-- `docs/resolucao-problemas.md` — resolução de problemas no arranque
-- `docs/modelo-er.png` — modelo E-R preliminar
+- `docs/resolucao-problemas.md` — resolução de problemas do ambiente
+- `docs/modelo-er.png` — modelo E-R da base de dados (8 tabelas), gerado no pgAdmin a partir das tabelas criadas pelo `docs/schema.sql`
+- `docs/schema.sql` — script de criação da base de dados (8 tabelas, com as restrições)
 - `config.py` — configuração lida do ambiente (.env)
 - `database.py` — abertura da ligação ao PostgreSQL
 - `main.py` — create_app(): cria a aplicação Flask

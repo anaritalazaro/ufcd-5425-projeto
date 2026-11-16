@@ -60,3 +60,29 @@
 - `docs/decisoes.md`: secção 6 com a fixação das versões e nova secção 10 com a evolução futura (pool de ligações, ciclo de vida das ligações, JSON em `/estado`)
 - `load_dotenv()` mantido dentro de `do_ambiente()`, seguindo a sebenta (secções 7.1 e 13)
 - Sprint 3 da UFCD 10790 acrescentado a `docs/entregas/`
+
+## Sessão 9 — 6 e 7 de novembro de 2026 (fora da aula)
+
+- Sub-issue #13: restrições do `docs/schema.sql` completadas a partir do dicionário de dados (UFCD 10790, Sprint 3): CHECK de valores permitidos, quantidades e regras condicionais do `movimento_stock`, regra do fecho do dia, `nome` único no equipamento e `ON DELETE RESTRICT` nas chaves estrangeiras; origem de cada restrição indicada no ficheiro
+- Corrigidos dois erros herdados do export do drawDB: UNIQUE isolado em `id_materia_prima` e `id_lote` (passa a UNIQUE composto) e `DEFAULT 0` nas quantidades do lote
+- `custo_unitario` (DECIMAL(12,6)) e `conservacao` (VARCHAR(20), com lista fixa de valores) ajustados a valores reais, a pensar nos dados de demonstração
+- Restrições testadas no PostgreSQL 18 com casos tirados dos critérios de aceitação do Sprint 3
+- Decisões registadas em `docs/decisoes.md` (secção 11)
+
+
+## Sessão 10 — 9 de novembro de 2026
+
+- #14: `docs/schema.sql` montado em `/docker-entrypoint-initdb.d/01-schema.sql`, só de leitura (commit c39dc68)
+- #15: teste de raiz com `docker compose down -v` (sem dados reais): oito `CREATE TABLE` nos *logs*, oito tabelas no `\dt` e no pgAdmin
+- #16: secção 12 de `docs/decisoes.md`; README com a criação das tabelas no primeiro arranque e o que fazer quando o `schema.sql` muda; novo problema em `docs/resolucao-problemas.md`
+- Sub-issues #14 a #16 fechadas; #12 com 4/4, a aguardar a integração do PR #17
+- Docker Desktop: versão atual 4.97.0 (Docker Engine 29.9.2, Compose v5.6.1); a 4.98.0 está disponível e exige o WSL 3.0.3 ou posterior (instalado: 3.0.3.0). Não foi instalada durante a aula, porque pode pedir para reiniciar. Decidido atualizar fora da aula; a partir de 20/11, sem atualizações até à defesa (27/11)
+
+## Sessão 11 — 9 de novembro de 2026 (fora da aula)
+
+- Docker Desktop atualizado de 4.97.0 para 4.99.0: Engine e cliente de 29.9.2 para 29.9.3, Compose de v5.6.1 para v5.7.0
+- A versão 4.98.0 prevista foi ultrapassada pela 4.99.0, lançada no próprio dia; instalada depois de rever as notas de lançamento, por incluir a correção de segurança do WSL 2 (da 4.98.0) e a correção da corrupção dos dados do Engine quando o Windows Update desliga o Docker Desktop
+- Contentor parado com `docker compose stop` antes da atualização
+- Depois da atualização, o `docker compose up -d` recriou o contentor `fornada-db`; os registos (`docker compose logs db`) confirmam que o volume foi mantido ("Skipping initialization")
+- Verificação: 8 tabelas no pgAdmin e página `/estado` com "OK" (PostgreSQL 18.6)
+- #18: diagrama E-R gerado no pgAdmin (ERD For Database) a partir da base de dados, em substituição do `docs/modelo-er.png`; a exportação de imagem do pgAdmin perde as linhas das relações, por isso a imagem é uma captura do diagrama (`docs/resolucao-problemas.md`)
