@@ -106,8 +106,11 @@ As dependências estão em `requirements.txt`:
 | `flask` | Framework web: recebe os pedidos e devolve as páginas | Stack validada pelo formador; leve, sem estrutura imposta, o que deixa as camadas visíveis |
 | `psycopg[binary]` | Driver que liga o Python ao PostgreSQL | Driver mais usado para PostgreSQL, com consultas parametrizadas; permite escrever o SQL à mão. A variante `binary` evita erros de compilação no Windows |
 | `python-dotenv` | Lê o ficheiro `.env` com as credenciais | O enunciado exige credenciais fora do código; o `config.py` lê-as depois com `os.getenv()` |
+| `pytest` | Executa os testes automáticos | Decisão D-11: está na stack validada e é o mais usado; os testes escrevem-se como funções com `assert`, mais curtas do que as classes do `unittest` da UFCD 10794 |
 
 As versões estão fixadas (`==`), para que todas as instalações usem exatamente as versões testadas com o Python 3.14. A fixação foi sugerida pelo formador na revisão do PR #2; as versões são as do ambiente de desenvolvimento, verificadas numa instalação nova. As dependências continuam no `requirements.txt`, e não num `pyproject.toml` como na sebenta (secção 5); a razão está na secção 8.
+
+O pytest só é preciso para desenvolver e testar, mas fica no mesmo `requirements.txt`; a sebenta separa-o como dependência de desenvolvimento no `pyproject.toml` (secção 5).
 
 A sebenta usa SQLite, acedido com o módulo `sqlite3` incluído no Python, e lê a configuração com `os.getenv()`. Como este projeto usa PostgreSQL e um ficheiro `.env`, foram precisos um driver para o PostgreSQL (psycopg) e uma biblioteca para ler o `.env` (python-dotenv).
 
@@ -202,3 +205,9 @@ O `docs/schema.sql` é montado no contentor em `/docker-entrypoint-initdb.d/01-s
 Alternativa posta de lado: correr o `schema.sql` à mão no pgAdmin, depois de cada arranque com a base de dados vazia. É um passo manual, fácil de esquecer, e cada pessoa que executa o projeto teria de o fazer.
 
 Evolução futura: quando houver dados reais, as alterações à estrutura passam a ser feitas com scripts de alteração (`ALTER TABLE`), em vez de recriar o volume.
+
+## 13. Classe Produto
+
+A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property`), com as regras da tabela `produto` do `schema.sql`: `TypeError` para um tipo errado e `DadosProdutoInvalidos`, subclasse de `ValueError`, para um valor inválido. A unicidade do nome não é verificada na classe, porque depende dos produtos guardados (sebenta 5425, secção 6.3); fica para o serviço e para o `UNIQUE` da base de dados (secção 9.2).
+
+**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, fica para depois da revisão do PR #17, para não alterar o que está em revisão.
