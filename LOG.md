@@ -96,3 +96,7 @@
 
 - Produtos (RF01, #19): classe `Produto` com testes pytest (#20), `ProdutoRepository` com listar e criar (#21) e `ProdutoService` com o nome único (#22); PR #24 em rascunho
 - Ligação ao PostgreSQL com `autocommit=True`, para o serviço controlar as transações; páginas (#23) para a próxima sessão
+
+## Sessão 14 — 16 de novembro de 2026 (fora da aula)
+
+- #23: páginas `/produtos` e `/produtos/novo` (rota → serviço → repositório); testadas no navegador: criação de um produto e recusa do nome repetido, com a mensagem no formulário e sem detalhes técnicos
