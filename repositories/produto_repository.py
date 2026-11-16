@@ -56,3 +56,10 @@ class ProdutoRepository:
             raise NomeProdutoDuplicado(produto.nome) from erro
         produto.id = linha[0]
         return produto
+
+    def existe_nome(self, nome: str) -> bool:
+        """Diz se já existe um produto com este nome (comparação exata)."""
+        linha = self.conn.execute(
+            "SELECT 1 FROM produto WHERE nome = %s", (nome,)
+        ).fetchone()
+        return linha is not None
