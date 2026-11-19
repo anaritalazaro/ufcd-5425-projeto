@@ -45,7 +45,7 @@ cd ufcd-5425-projeto
 Copy-Item .env.example .env
 ```
 
-Abre o `.env` (por exemplo, com `notepad .env`) e preenche-o com `POSTGRES_HOST=localhost`, `POSTGRES_PORT=5433` e um nome de base de dados, utilizador e palavra-passe à escolha (em minúsculas, sem espaços nem `$`). Grava o ficheiro antes de continuar. O `.env` não vai para o GitHub.
+Abre o `.env` (por exemplo, com `notepad .env`) e preenche-o com `POSTGRES_HOST=127.0.0.1`, `POSTGRES_PORT=5433` e um nome de base de dados, utilizador e palavra-passe à escolha (em minúsculas, sem espaços nem `$`). Grava o ficheiro antes de continuar. O `.env` não vai para o GitHub.
 
 **2. Arrancar a base de dados**
 
@@ -56,7 +56,7 @@ docker compose up -d
 docker compose ps
 ```
 
-O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No primeiro arranque, as tabelas são criadas automaticamente a partir do `docs/schema.sql`. No pgAdmin, liga-te a `localhost`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar; outra é um erro no `schema.sql`.
+O contentor `fornada-db` deve aparecer com o estado **Up** e a porta `127.0.0.1:5433->5432/tcp`. Os dados mantêm-se entre arranques. No primeiro arranque, as tabelas são criadas automaticamente a partir do `docs/schema.sql`. No pgAdmin, liga-te a `127.0.0.1`, porta `5433`, com as credenciais do `.env`. Se o contentor não aparecer na lista, vê a causa com `docker compose logs db`. A mais comum é o `.env` ter ficado por preencher ou por gravar; outra é um erro no `schema.sql`.
 
 
 **Quando o `docs/schema.sql` muda:** o script só corre com a base de dados vazia. Para aplicar a nova versão, recria a base de dados. **Apaga todos os dados:**

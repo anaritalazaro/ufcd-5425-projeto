@@ -48,3 +48,9 @@ docker compose logs db
 O botão **Download image** do diagrama E-R do pgAdmin exporta as tabelas, mas não as linhas das relações (ficam só os pontos junto às colunas). É um erro conhecido do pgAdmin.
 
 Faz uma captura do diagrama: maximiza a janela, recolhe o Object Explorer, carrega em **Zoom to fit** e usa `Windows + Shift + S`. Recorta só a área do diagrama, sem a barra de cima, que mostra o nome da base de dados e do utilizador.
+
+## As páginas com dados demoram alguns segundos a carregar
+
+A página inicial abre logo, mas as que usam a base de dados demoram. Causa: no Windows, `localhost` corresponde primeiro ao IPv6 (`::1`), e o Docker só publica a porta em IPv4 (`127.0.0.1`); cada ligação espera pela falha do IPv6 antes de passar ao IPv4.
+
+Solução: no `.env`, usar `POSTGRES_HOST=127.0.0.1` em vez de `localhost`, e reiniciar o Flask. Fonte: [The localhost trap](https://dev.to/skucherenko/the-localhost-trap-a-10-second-database-connection-on-windows-3le7).
