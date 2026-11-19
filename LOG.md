@@ -100,3 +100,8 @@
 ## Sessão 14 — 16 de novembro de 2026 (fora da aula)
 
 - #23: páginas `/produtos` e `/produtos/novo` (rota → serviço → repositório); testadas no navegador: criação de um produto e recusa do nome repetido, com a mensagem no formulário e sem detalhes técnicos
+
+## Sessão 15 — 19 de novembro de 2026 (fora da aula)
+
+- Matérias-primas e stock (RF02, #26, PR #27): classes `MateriaPrima` e `MovimentoStock` com 38 testes pytest (dois erros detetados e corrigidos pelos testes); repositórios e serviço, com a entrada de stock numa só transação; páginas para listar, criar e registar entradas, testadas no navegador
+- Ligação com `POSTGRES_HOST=127.0.0.1` em vez de `localhost` (no Windows, cada ligação demorava alguns segundos); ajuste de stock e `FOR UPDATE` (RF04) ficam para depois
