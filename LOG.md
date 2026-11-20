@@ -105,3 +105,12 @@
 
 - Matérias-primas e stock (RF02, #26, PR #27): classes `MateriaPrima` e `MovimentoStock` com 38 testes pytest (dois erros detetados e corrigidos pelos testes); repositórios e serviço, com a entrada de stock numa só transação; páginas para listar, criar e registar entradas, testadas no navegador
 - Ligação com `POSTGRES_HOST=127.0.0.1` em vez de `localhost` (no Windows, cada ligação demorava alguns segundos); ajuste de stock e `FOR UPDATE` (RF04) ficam para depois
+
+
+## Sessão 16 — 20 de novembro de 2026
+
+- PR #24 (produtos) integrado no `main`; revisão do formador ao PR #27, com os pontos 4 e 5 feitos nesta sessão e os restantes por fazer
+- Receitas (RF03, #32): `LinhaReceita` com `consumo_para()` (#33); `ReceitaRepository` e `ReceitaService` (#34), sem páginas
+- Registo do lote (RF04, #35): classe `Lote` e `MateriaPrima.registar_consumo()` (#36); `LoteService` com `FOR UPDATE` pela ordem do id e verificação do stock antes de gravar (#37); PR #38
+- 67 testes pytest (eram 48); lote verificado na base de dados do Docker (registo, lote repetido e stock insuficiente) e, numa base de dados temporária, com dois registos ao mesmo tempo: o segundo esperou pelo bloqueio e foi recusado por falta de stock
+- Decisões registadas em `docs/decisoes.md` (secções 2, 3 e 14)

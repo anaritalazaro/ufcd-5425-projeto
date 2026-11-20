@@ -47,6 +47,8 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
 
 **Entrada de stock (Sessão 15).** Uma matéria-prima nova começa com stock 0; o stock inicial regista-se como uma entrada, para que todo o stock tenha um movimento. O movimento e o stock gravam-se na mesma transação; o stock atualiza-se com `stock_atual = stock_atual + quantidade`, que não perde entradas simultâneas sem precisar de bloquear a linha. O bloqueio (`FOR UPDATE`) fica para o registo do lote, que lê o stock antes de o descontar; é uma sugestão do formador da UFCD 10790, a confirmar.
 
+**Registo do lote (Sessão 16).** O lote, os movimentos de consumo e os descontos no stock gravam-se numa só transação, em três passos: ler e bloquear cada matéria-prima da receita com `SELECT ... FOR UPDATE`; verificar o stock de todas; e só depois gravar. Se faltar alguma, nada é gravado, e a mensagem indica todas as que faltam, com a quantidade em falta. As matérias-primas são bloqueadas sempre pela ordem do id (a receita é lida com `ORDER BY id_materia_prima`), para que duas transações não fiquem à espera uma da outra (*deadlock*). O `FOR UPDATE` foi sugerido pelo formador da UFCD 10790; a ordem dos três passos e o bloqueio pela ordem do id são propostas, já enviadas ao formador e ainda por confirmar. Fonte: PostgreSQL 18, *Explicit Locking*.
+
 ## 3. Receitas e quantidades
  
 As quantidades da receita são definidas **para uma quantidade-base de produção**, como numa ficha técnica. Cada produto tem um **rendimento do lote**: o número de unidades que a receita produz.
@@ -71,6 +73,8 @@ O consumo é calculado proporcionalmente à **quantidade efetivamente produzida*
  
 > consumo = (quantidade produzida ÷ rendimento do lote) × quantidade da receita
 > farinha para 60 pastéis = (60 ÷ 100) × 1 505 g = 903 g
+
+**Cálculo no código (Sessão 16).** O Python multiplica antes de dividir, (quantidade da receita × quantidade produzida) ÷ rendimento do lote, e arredonda uma só vez, para cima, a 3 casas decimais (`ROUND_UP`). O resultado é o mesmo (903 g para 60 pastéis), mas há só um arredondamento, um consumo pequeno nunca fica a 0 e nunca se desconta menos do que o real. Fonte: Python, módulo `decimal`.
  
 Simplificações da primeira versão:
  
@@ -212,3 +216,14 @@ A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property
 
 **Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, fica para depois da revisão do PR #17, para não alterar o que está em revisão.
 
+## 14. Receitas e lotes
+
+**Receitas.** Uma receita substitui-se inteira: o serviço apaga as linhas antigas e grava as novas na mesma transação. As linhas (`LinhaReceita`) só têm leitura. A quantidade consumida fica guardada no movimento de stock, por isso mudar uma receita não altera os lotes já registados. Na primeira versão, as receitas não têm páginas: são criadas pelo script de dados de demonstração através do `ReceitaService`, que aplica as mesmas validações. As páginas das receitas ficam para a evolução futura.
+
+**Código do lote.** Formato `P007-20261120-0930`: o produto com três algarismos, a data e a hora ao minuto. É uma proposta adaptada da sugestão do formador no PR #17. Com o `UNIQUE` da coluna, registar o mesmo lote duas vezes é recusado (RN06). Limitação aceite: dois lotes do mesmo produto no mesmo minuto também são recusados.
+
+**Nome do código do lote.** O atributo no Python chama-se `codigo_lote`, como no diagrama de classes (`codigoLote`); a coluna chama-se `lote`, como no dicionário de dados (`lote VARCHAR(40)`). Ao gravar, a ligação faz-se pelo parâmetro `%(codigo_lote)s`; ao ler, faz-se com `lote AS codigo_lote`, como já acontece com `id_produto AS id`. No Python, `lote.lote` seria confuso.
+
+**`Lote.novo()`.** É um construtor alternativo (`@classmethod`) para um lote novo: calcula o código e a validade (RN08) e recusa um produto inativo (RN11). O `__init__` serve para reconstruir um lote lido da base de dados. A recusa do produto inativo estava prevista no serviço; passou para o domínio para ficar num só sítio e ser testada sem base de dados.
+
+**`MateriaPrima.registar_consumo()`.** Não está no diagrama de classes v2: é uma proposta, que será acrescentada ao diagrama como `registarConsumo(qtd, lote) «RN05»`. Faz o mesmo que o `registar_entrada()`, no sentido oposto: subtrai, precisa do lote e verifica o stock. Sem ele, o serviço teria de alterar o `_stock_atual` de fora da classe (contra a D-02) ou deixar o objeto com o stock desatualizado (ponto 4 da revisão do PR #27).

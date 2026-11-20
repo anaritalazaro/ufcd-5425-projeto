@@ -68,4 +68,18 @@ def test_tem_stock_e_abaixo_do_minimo():
     assert materia.tem_stock(Decimal("1000"))
     assert not materia.tem_stock(Decimal("1000.001"))
     assert materia.abaixo_do_minimo()
-    
+
+
+def test_registar_consumo_desconta_o_stock():
+    materia = MateriaPrima(**dados(id=1, stock_atual=Decimal("25000")))
+    movimento = materia.registar_consumo(Decimal("903"), id_lote=1)
+    assert materia.stock_atual == Decimal("24097.000")      # critério do RF04
+    assert movimento.tipo == "consumo"
+    assert movimento.id_lote == 1
+
+
+def test_consumo_sem_stock_e_recusado_e_mantem_o_stock():
+    materia = MateriaPrima(**dados(id=1, stock_atual=Decimal("100")))
+    with pytest.raises(DadosMateriaPrimaInvalidos):
+        materia.registar_consumo(Decimal("100.001"), id_lote=1)
+    assert materia.stock_atual == Decimal("100.000")
