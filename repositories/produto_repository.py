@@ -6,14 +6,22 @@ from psycopg.rows import dict_row                    # O dict_row diz ao psycopg
 
 from domain.produto import NomeProdutoDuplicado, Produto
 
-# "AS id": a coluna fica com o nome do argumento do Produto. [Prop]
+# "AS id": a coluna fica com o nome do argumento do Produto [Prop].
 SQL_LISTAR = """
     SELECT id_produto AS id, nome, categoria, preco_venda, validade_horas,
            conservacao, ativo, rendimento_lote
     FROM produto
     ORDER BY nome
 """
-# Parâmetros com nome: os valores vão à parte do SQL (RNF05). [Sebenta 5425, 8.2]
+
+SQL_OBTER = """
+    SELECT id_produto AS id, nome, categoria, preco_venda, validade_horas,
+           conservacao, ativo, rendimento_lote
+    FROM produto
+    WHERE id_produto = %s
+"""
+
+# Parâmetros com nome: os valores vão à parte do SQL (RNF05) [Sebenta 5425, 8.2].
 # RETURNING devolve o id gerado pelo SERIAL (no SQLite da sebenta: lastrowid).
 SQL_CRIAR = """
     INSERT INTO produto (nome, categoria, preco_venda, validade_horas,
@@ -33,10 +41,17 @@ class ProdutoRepository:
     def listar(self) -> list[Produto]:
         """Devolve todos os produtos, por ordem alfabética do nome."""
         # dict_row: cada linha vem como dicionário, e Produto(**linha) cria o objeto.
-        # Os dados lidos passam outra vez pelos setters do Produto. [Prop]
+        # Os dados lidos passam outra vez pelos setters do Produto [Prop].
         with self.conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute(SQL_LISTAR)
             return [Produto(**linha) for linha in cursor.fetchall()]
+
+    def obter(self, id_produto: int) -> Produto | None:
+        """Devolve o produto com este id, ou None se não existir."""
+        with self.conn.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(SQL_OBTER, (id_produto,))
+            linha = cursor.fetchone()
+        return Produto(**linha) if linha else None
 
     def criar(self, produto: Produto) -> Produto:
         """Grava um produto novo e devolve-o com o id atribuído pela base de dados."""
