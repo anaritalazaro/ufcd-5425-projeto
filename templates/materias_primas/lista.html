@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Matérias-primas · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Matérias-primas</h1>
+  {% if erro %}<p><strong>{{ erro }}</strong></p>{% endif %}
+  <p>
+    <a href="{{ url_for('materias_primas.nova') }}">Nova matéria-prima</a> ·
+    <a href="{{ url_for('materias_primas.entrada') }}">Registar entrada de stock</a>
+  </p>
+  {% if materias %}
+  <table>
+    <tr>
+      <th>Nome</th><th>Unidade</th><th>Stock atual</th><th>Stock mínimo</th>
+      <th>Custo unitário (€)</th><th>Alergénios</th><th>Aviso</th>
+    </tr>
+    {% for materia in materias %}
+    <tr>
+      <td>{{ materia.nome }}</td>
+      <td>{{ materia.unidade }}</td>
+      <td>{{ materia.stock_atual }}</td>
+      <td>{{ materia.stock_minimo }}</td>
+      <td>{{ materia.custo_unitario }}</td>
+      <td>{{ materia.alergenios or "" }}</td>
+      <td>{{ "Abaixo do mínimo" if materia.abaixo_do_minimo() else "" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% elif not erro %}
+  <p>Ainda não há matérias-primas.</p>
+  {% endif %}
+</body>
+</html>

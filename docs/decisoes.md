@@ -45,7 +45,7 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
 - uma entrada ou ajuste grava o movimento e atualiza o stock na mesma transação;
 - o registo de um lote cria o lote, grava os consumos e atualiza o stock na mesma transação. Se faltar stock de alguma matéria-prima, nada fica guardado.
 
-O stock inicial é registado como uma entrada.
+**Entrada de stock (Sessão 15).** Uma matéria-prima nova começa com stock 0; o stock inicial regista-se como uma entrada, para que todo o stock tenha um movimento. O movimento e o stock gravam-se na mesma transação; o stock atualiza-se com `stock_atual = stock_atual + quantidade`, que não perde entradas simultâneas sem precisar de bloquear a linha. O bloqueio (`FOR UPDATE`) fica para o registo do lote, que lê o stock antes de o descontar; é uma sugestão do formador da UFCD 10790, a confirmar.
 
 ## 3. Receitas e quantidades
  
@@ -211,3 +211,4 @@ Evolução futura: quando houver dados reais, as alterações à estrutura passa
 A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property`), com as regras da tabela `produto` do `schema.sql`: `TypeError` para um tipo errado e `DadosProdutoInvalidos`, subclasse de `ValueError`, para um valor inválido. A unicidade do nome não é verificada na classe, porque depende dos produtos guardados (sebenta 5425, secção 6.3); fica para o serviço e para o `UNIQUE` da base de dados (secção 9.2).
 
 **Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, fica para depois da revisão do PR #17, para não alterar o que está em revisão.
+

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Entrada de stock · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Entrada de stock</h1>
+  {% if erro %}<p><strong>{{ erro }}</strong></p>{% endif %}
+  {% if materias %}
+  <form method="post">
+    <p><label>Matéria-prima
+      <select name="id_materia_prima">
+        {% for materia in materias if materia.ativo %}
+        <option value="{{ materia.id }}" {% if dados.id_materia_prima == materia.id|string %}selected{% endif %}>
+          {{ materia.nome }} ({{ materia.unidade }}; stock: {{ materia.stock_atual }})
+        </option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>Quantidade <input name="quantidade" value="{{ dados.quantidade }}" inputmode="decimal" required></label></p>
+    <p><button type="submit">Registar</button> <a href="{{ url_for('materias_primas.lista') }}">Cancelar</a></p>
+  </form>
+  {% elif not erro %}
+  <p>Primeiro crie uma <a href="{{ url_for('materias_primas.nova') }}">matéria-prima</a>.</p>
+  {% endif %}
+</body>
+</html>
