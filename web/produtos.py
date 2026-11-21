@@ -1,13 +1,12 @@
 """Rotas dos produtos: listar e criar (RF01). Sem SQL (RNF01)."""
 
-from decimal import Decimal, InvalidOperation
-
 from flask import Blueprint, current_app, redirect, render_template, request, url_for
 
 from database import ErroLigacaoBD, abrir_ligacao
 from domain.produto import CONSERVACOES, DadosProdutoInvalidos
 from repositories.produto_repository import ProdutoRepository
 from services.produto_service import ProdutoService
+from web.formularios import CampoInvalido, para_decimal, para_inteiro
 
 bp = Blueprint("produtos", __name__, url_prefix="/produtos")
 
@@ -22,17 +21,15 @@ def construir_servico(conn) -> ProdutoService:
 def converter_formulario(formulario) -> dict:
     """Converte o texto do formulário nos tipos que o Produto espera."""
     # A rota só converte os tipos; as regras ficam no Produto. [Sebenta 5425, 10.1]
-    try:
-        preco = Decimal(formulario.get("preco_venda", "").strip().replace(",", "."))
-    except InvalidOperation:
-        raise DadosProdutoInvalidos("O preço de venda tem de ser um número.") from None
-    try:
-        validade = int(formulario.get("validade_horas", ""))
-        rendimento = int(formulario.get("rendimento_lote", ""))
-    except ValueError:
-        raise DadosProdutoInvalidos(
-            "A validade e o rendimento do lote têm de ser números inteiros."
-        ) from None
+    preco = para_decimal(
+        formulario.get("preco_venda"),
+        "O preço de venda tem de ser um número.")
+    validade = para_inteiro(
+        formulario.get("validade_horas"),
+        "A validade tem de ser um número inteiro de horas.")
+    rendimento = para_inteiro(
+        formulario.get("rendimento_lote"),
+        "O rendimento do lote tem de ser um número inteiro.")
     return {
         "nome": formulario.get("nome", ""),
         "categoria": formulario.get("categoria", ""),
@@ -74,8 +71,9 @@ def novo():
             construir_servico(conn).criar_produto(**valores)
         finally:
             conn.close()
-    except DadosProdutoInvalidos as erro:
-        # Inclui o nome repetido (NomeProdutoDuplicado é subclasse).
+    except (DadosProdutoInvalidos, CampoInvalido) as erro:
+        # DadosProdutoInvalidos inclui o nome repetido (NomeProdutoDuplicado
+        # é subclasse); CampoInvalido vem da conversão (web/formularios.py).
         # Devolve o formulário com os dados escritos e a mensagem. [Prop: 422]
         return render_template("produtos/formulario.html", dados=dados,
                                erro=str(erro), conservacoes=CONSERVACOES), 422
