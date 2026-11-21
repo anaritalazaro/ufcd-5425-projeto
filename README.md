@@ -26,9 +26,9 @@ O Fornada · Sobra Zero é uma aplicação para planear e registar a produção 
 
 ## Tecnologias
  
-- Python e Flask
-- PostgreSQL
-- Docker
+- Python 3.14 e Flask 3.1
+- PostgreSQL 18 (em Docker), com o psycopg 3
+- Docker Desktop (Docker Compose)
 - pytest
 
 ## Executar
@@ -79,6 +79,16 @@ A aplicação fica em <http://127.0.0.1:5000>. Para confirmar a ligação à bas
 
 **Parar:** `Ctrl+C` no terminal do Flask e depois `docker compose stop`. Não uses `docker compose down -v`, que apaga a base de dados.
 
+**4. Correr os testes**
+
+Com o `.venv` ativo:
+
+```powershell
+python -m pytest
+```
+
+Os testes verificam as classes e as regras do domínio e não precisam da base de dados.
+
 Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
  
 ## Estrutura dos ficheiros
@@ -100,6 +110,7 @@ Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/res
 - `services/` — operações e transações
 - `web/`  — rotas Flask (blueprints)
 - `templates/` — páginas HTML (Jinja2)
+- `tests/` — testes automáticos (pytest)
 
 
 ## Autoria

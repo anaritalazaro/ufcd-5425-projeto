@@ -45,7 +45,7 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
 - uma entrada ou ajuste grava o movimento e atualiza o stock na mesma transação;
 - o registo de um lote cria o lote, grava os consumos e atualiza o stock na mesma transação. Se faltar stock de alguma matéria-prima, nada fica guardado.
 
-**Entrada de stock (Sessão 15).** Uma matéria-prima nova começa com stock 0; o stock inicial regista-se como uma entrada, para que todo o stock tenha um movimento. O movimento e o stock gravam-se na mesma transação; o stock atualiza-se com `stock_atual = stock_atual + quantidade`, que não perde entradas simultâneas sem precisar de bloquear a linha. O bloqueio (`FOR UPDATE`) fica para o registo do lote, que lê o stock antes de o descontar; é uma sugestão do formador da UFCD 10790, a confirmar.
+**Entrada de stock (Sessão 15).** Uma matéria-prima nova começa com stock 0; o stock inicial regista-se como uma entrada, para que todo o stock tenha um movimento. O movimento e o stock gravam-se na mesma transação; o stock atualiza-se com `stock_atual = stock_atual + quantidade`, que não perde entradas simultâneas sem precisar de bloquear a linha. O bloqueio (`FOR UPDATE`) fica para o registo do lote, que lê o stock antes de o descontar (ver *Registo do lote*, abaixo).
 
 **Registo do lote (Sessão 16).** O lote, os movimentos de consumo e os descontos no stock gravam-se numa só transação, em três passos: ler e bloquear cada matéria-prima da receita com `SELECT ... FOR UPDATE`; verificar o stock de todas; e só depois gravar. Se faltar alguma, nada é gravado, e a mensagem indica todas as que faltam, com a quantidade em falta. As matérias-primas são bloqueadas sempre pela ordem do id (a receita é lida com `ORDER BY id_materia_prima`), para que duas transações não fiquem à espera uma da outra (*deadlock*). O `FOR UPDATE` foi sugerido pelo formador da UFCD 10790; a ordem dos três passos e o bloqueio pela ordem do id são propostas, já enviadas ao formador e ainda por confirmar. Fonte: PostgreSQL 18, *Explicit Locking*.
 
@@ -145,7 +145,7 @@ A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`),
 
 **Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
 
-**Ligações.** A aplicação e o pgAdmin ligam-se a `localhost:5433`, com as credenciais do `.env` (`POSTGRES_PORT=5433`).
+**Ligações.** A aplicação e o pgAdmin ligam-se a 127.0.0.1:5433 , com as credenciais do `.env` (`POSTGRES_HOST=127.0.0.1`,POSTGRES_PORT=5433 ). Com localhost, cada ligação demorava alguns segundos no Windows (ver resolucao-problemas.md).
 
 **Estrutura.** As pastas seguem as responsabilidades da sebenta da UFCD 5425 (secção 4.1), mas ficam na raiz do projeto, sem `src/`, e as dependências estão em `requirements.txt`. A organização das camadas é a mesma; a diferença está só na forma de instalar o projeto.
 
@@ -188,7 +188,7 @@ O `docs/schema.sql` completa o modelo E-R v.1 com as restrições do dicionário
 - Restrições com nome (`ck_...`, `fk_...`, `uq_...`), para que o repositório identifique a regra violada e traduza o erro (sebenta da UFCD 5425, secção 9.3).
 - Chaves estrangeiras com `ON DELETE RESTRICT`: nada com histórico se apaga (RN11), e a base de dados recusa de imediato apagar um registo usado noutra tabela.
 - Chaves estrangeiras dentro do `CREATE TABLE`, com `IF NOT EXISTS` (sebenta da UFCD 5425, secção 7.3): o script pode correr mais do que uma vez sem erro.
-- Validade do lote: pretende-se que o cálculo exato seja feito no Python, em `Lote.calcularValidade()`. A base de dados só verifica que a validade fica depois da produção (`ck_lote_validade`), para apanhar um erro de cálculo. Esta verificação é uma proposta (não está no dicionário de dados).
+- Validade do lote: o cálculo exato é feito no Python, em `Lote.calcular_validade()`. A base de dados só verifica que a validade fica depois da produção (`ck_lote_validade`), para apanhar um erro de cálculo. Esta verificação é uma proposta (não está no dicionário de dados).
 - Regras a verificar no Python e não na base de dados, porque um CHECK só vê a linha que está a ser gravada e não consegue consultar outras tabelas:
   - se uma leitura de temperatura está fora dos limites do equipamento;
   - a validade exata do lote, que depende das horas de validade do produto;
@@ -214,7 +214,7 @@ Evolução futura: quando houver dados reais, as alterações à estrutura passa
 
 A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property`), com as regras da tabela `produto` do `schema.sql`: `TypeError` para um tipo errado e `DadosProdutoInvalidos`, subclasse de `ValueError`, para um valor inválido. A unicidade do nome não é verificada na classe, porque depende dos produtos guardados (sebenta 5425, secção 6.3); fica para o serviço e para o `UNIQUE` da base de dados (secção 9.2).
 
-**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, fica para depois da revisão do PR #17, para não alterar o que está em revisão.
+**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, ficou para depois da revisão do PR #17, para não alterar o que estava em revisão. A revisão foi feita a 16/11; a correção está planeada para a v1.0, junto com o CHECK de `equipamento.tipo`.
 
 ## 14. Receitas e lotes
 
@@ -226,4 +226,4 @@ A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property
 
 **`Lote.novo()`.** É um construtor alternativo (`@classmethod`) para um lote novo: calcula o código e a validade (RN08) e recusa um produto inativo (RN11). O `__init__` serve para reconstruir um lote lido da base de dados. A recusa do produto inativo estava prevista no serviço; passou para o domínio para ficar num só sítio e ser testada sem base de dados.
 
-**`MateriaPrima.registar_consumo()`.** Não está no diagrama de classes v2: é uma proposta, que será acrescentada ao diagrama como `registarConsumo(qtd, lote) «RN05»`. Faz o mesmo que o `registar_entrada()`, no sentido oposto: subtrai, precisa do lote e verifica o stock. Sem ele, o serviço teria de alterar o `_stock_atual` de fora da classe (contra a D-02) ou deixar o objeto com o stock desatualizado (ponto 4 da revisão do PR #27).
+**`MateriaPrima.registar_consumo()`.** Não está no diagrama de classes v2: é uma proposta, que será acrescentada ao diagrama como `registar_consumo(qtd, lote) «RN05»`. Faz o mesmo que o `registar_entrada()`, no sentido oposto: subtrai, precisa do lote e verifica o stock. Sem ele, o serviço teria de alterar o `_stock_atual` de fora da classe (contra a D-02) ou deixar o objeto com o stock desatualizado (ponto 4 da revisão do PR #27).
