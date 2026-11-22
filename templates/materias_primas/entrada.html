@@ -12,7 +12,7 @@
     <p><label>Matéria-prima
       <select name="id_materia_prima">
         {% for materia in materias if materia.ativo %}
-        <option value="{{ materia.id }}" {% if dados.id_materia_prima == materia.id|string %}selected{% endif %}>
+        <option value="{{ materia.id }}" {% if materia.id == id_escolhido %}selected{% endif %}>
           {{ materia.nome }} ({{ materia.unidade }}; stock: {{ materia.stock_atual }})
         </option>
         {% endfor %}
