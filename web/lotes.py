@@ -1,12 +1,14 @@
-"""Rotas dos lotes de produção: registar um lote (RF04). Sem SQL (RNF01)."""
+"""Rotas dos lotes de produção: registar um lote (RF04) e fechar o dia
+(RF07, RF15). Sem SQL (RNF01)."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import (Blueprint, current_app, redirect, render_template,
                    request, url_for)
 
 from database import ErroLigacaoBD, abrir_ligacao
-from domain.lote import TURNOS, DadosLoteInvalidos, StockInsuficiente
+from domain.lote import (TURNOS, DadosLoteInvalidos, FechoInvalido,
+                         StockInsuficiente)
 from repositories.lote_repository import LoteRepository
 from repositories.materia_prima_repository import MateriaPrimaRepository
 from repositories.movimento_stock_repository import MovimentoStockRepository
@@ -14,7 +16,8 @@ from repositories.produto_repository import ProdutoRepository
 from repositories.receita_repository import ReceitaRepository
 from services.lote_service import LoteService
 from services.produto_service import ProdutoService
-from web.formularios import CampoInvalido, para_data_hora, para_inteiro
+from web.formularios import (CampoInvalido, para_data, para_data_hora,
+                             para_inteiro)
 # A mesma resposta 503 das matérias-primas, sem a repetir aqui.
 from web.materias_primas import sem_ligacao
 
@@ -23,7 +26,9 @@ from web.materias_primas import sem_ligacao
 bp = Blueprint("lotes", __name__, url_prefix="/lotes")
 
 TEMPLATE = "lotes/formulario.html"
-
+TEMPLATE_FECHO = "lotes/fecho.html"
+MENSAGEM_QUANTIDADES = ("O vendido e o desperdiçado têm de ser números "
+                        "inteiros.")
 
 def construir_servicos(conn) -> tuple[LoteService, ProdutoService]:
     """Constrói os serviços do lote e dos produtos na mesma ligação."""
@@ -75,8 +80,9 @@ def novo():
                 # em TURNOS (RN12).
                 servico.registar_lote(id_escolhido, data_hora,
                                       dados.get("turno", ""), qtd_produzida)
-                # A lista das matérias-primas mostra o stock já com a saída.
-                return redirect(url_for("materias_primas.lista"))
+                # Os lotes do dia mostram o lote novo, aberto (RF15).
+                return redirect(url_for("lotes.fecho",
+                                        dia=data_hora.date().isoformat()))
             # DadosLoteInvalidos inclui o StockInsuficiente e o
             # LoteJaRegistado (subclasses); CampoInvalido vem da conversão.
             except (DadosLoteInvalidos, CampoInvalido) as erro:
@@ -94,4 +100,62 @@ def novo():
             faltas=faltas, erro=None)
     finally:
         # Fecha a ligação em qualquer caso (GET, POST com sucesso ou erro)
+        conn.close()
+
+
+@bp.route("/fecho", methods=["GET", "POST"])
+def fecho():
+    """GET mostra os lotes de um dia; POST fecha o dia (RF07, RN10)."""
+    dados = request.form.to_dict()
+    # O dia vem do endereço (?dia=2026-11-23) ou do formulário; sem dia,
+    # é hoje. request.values junta os dois.
+    texto_dia = request.values.get("dia") or date.today().isoformat()
+    erro = None
+    erros = {}            # id do lote → mensagem (ficha do RF07)
+    try:
+        dia = para_data(texto_dia, "Indique uma data válida.")
+    except CampoInvalido as erro_data:
+        dia, erro = date.today(), str(erro_data)
+    contexto = {"dia": dia, "dados": dados, "erros": erros}
+    try:
+        conn = abrir_ligacao(current_app.config["BD"])
+    except ErroLigacaoBD as erro_bd:
+        return sem_ligacao(erro_bd, TEMPLATE_FECHO, lotes=[], nomes={},
+                           **contexto)
+    try:
+        servico, servico_produtos = construir_servicos(conn)
+        estado_http = 200
+        if request.method == "POST" and erro is None:
+            try:
+                # A rota só converte; as regras ficam no Lote (RN10).
+                quantidades = {}
+                for lote in servico.listar_do_dia(dia):
+                    if lote.estado != "aberto":
+                        continue
+                    try:
+                        quantidades[lote.id] = (
+                            para_inteiro(dados.get(f"vendido_{lote.id}"),
+                                         MENSAGEM_QUANTIDADES),
+                            para_inteiro(dados.get(f"desperdicado_{lote.id}"),
+                                         MENSAGEM_QUANTIDADES))
+                    except CampoInvalido as erro_campo:
+                        erros[lote.id] = str(erro_campo)
+                if erros:
+                    raise FechoInvalido(erros)
+                servico.fechar_dia(dia, quantidades)
+                return redirect(url_for("lotes.fecho", dia=dia.isoformat()))
+            except FechoInvalido as erro_fecho:
+                # Um ou mais lotes assinalados; nada foi gravado.
+                erros.update(erro_fecho.erros)
+                erro, estado_http = str(erro_fecho), 422
+            except DadosLoteInvalidos as erro_lote:
+                # Por exemplo, nenhum lote aberto neste dia.
+                erro, estado_http = str(erro_lote), 422
+        # Nomes dos produtos para a tabela: id → nome.
+        nomes = {produto.id: produto.nome
+                 for produto in servico_produtos.listar_produtos()}
+        return render_template(TEMPLATE_FECHO,
+                               lotes=servico.listar_do_dia(dia), nomes=nomes,
+                               erro=erro, **contexto), estado_http
+    finally:
         conn.close()

@@ -1,11 +1,11 @@
 """Testes da conversão dos campos dos formulários (web/formularios.py)."""
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
 
-from web.formularios import (CampoInvalido, para_data_hora,
+from web.formularios import (CampoInvalido, para_data, para_data_hora,
                              para_decimal, para_inteiro)
 
 
@@ -45,3 +45,13 @@ def test_para_data_hora_recusa_texto(texto):
     mensagem = "Indique a data e a hora de produção."
     with pytest.raises(CampoInvalido, match=mensagem):
         para_data_hora(texto, mensagem)
+
+
+def test_para_data_aceita_valor_do_navegador():
+    assert para_data("2026-11-23", "erro") == date(2026, 11, 23)
+
+
+@pytest.mark.parametrize("texto", ["", None, "23/11/2026", "2026-02-30"])
+def test_para_data_recusa_texto(texto):
+    with pytest.raises(CampoInvalido, match="Indique uma data válida."):
+        para_data(texto, "Indique uma data válida.")

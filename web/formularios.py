@@ -5,7 +5,7 @@ regras (maior do que zero, casas decimais, máximo) ficam no domínio.
 [Sebenta 5425, 10.1; revisão do PR #27, ponto 7]
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 
@@ -44,5 +44,15 @@ def para_data_hora(texto: str | None, mensagem: str) -> datetime:
     # input type="datetime-local"]
     try:
         return datetime.strptime((texto or "").strip(), "%Y-%m-%dT%H:%M")
+    except ValueError:
+        raise CampoInvalido(mensagem) from None
+
+
+def para_data(texto: str | None, mensagem: str) -> date:
+    """Converte o valor de um campo date (AAAA-MM-DD) num date."""
+    # Como no datetime-local, o navegador envia sempre este formato.
+    # [MDN, input type="date"]
+    try:
+        return datetime.strptime((texto or "").strip(), "%Y-%m-%d").date()
     except ValueError:
         raise CampoInvalido(mensagem) from None

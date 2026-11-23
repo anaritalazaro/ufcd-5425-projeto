@@ -1,11 +1,12 @@
 """Registo do lote (RF04): lote, consumos e stock numa só transação (D-02, 
 D-17, RN05, RN06)."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 import psycopg
 
-from domain.lote import DadosLoteInvalidos, Lote, StockInsuficiente
+from domain.lote import (DadosLoteInvalidos, FechoInvalido, Lote,
+                         StockInsuficiente)
 from repositories.lote_repository import LoteRepository
 from repositories.materia_prima_repository import MateriaPrimaRepository
 from repositories.movimento_stock_repository import MovimentoStockRepository
@@ -74,3 +75,43 @@ class LoteService:
                 self.movimentos.inserir(movimento)
                 self.materias.somar_stock(materia.id, -movimento.quantidade)
         return lote
+
+    def listar_do_dia(self, dia: date) -> list[Lote]:
+        """RF15: os lotes produzidos num dia (abertos e fechados)."""
+        return self.lotes.listar_do_dia(dia)
+
+    def fechar_dia(self, dia: date,
+                   quantidades: dict[int, tuple[int, int]]) -> list[Lote]:
+        """RF07: fecha todos os lotes abertos do dia, ou nenhum.
+
+        quantidades: id do lote → (vendido, desperdiçado).
+        """
+        with self.conn.transaction():
+            # Bloqueia os lotes do dia: dois fechos ao mesmo tempo não
+            # gravam por cima um do outro (como o FOR UPDATE do RF04, D-25).
+            abertos = [lote for lote in
+                       self.lotes.listar_do_dia(dia, para_atualizar=True)
+                       if lote.estado == "aberto"]
+            # Ficha do RF07: requer pelo menos um lote; o dia não pode
+            # estar já fechado.
+            if not abertos:
+                raise DadosLoteInvalidos("Não há lotes abertos neste dia.")
+
+            # Valida todos os lotes antes de gravar algum, para assinalar
+            # todos os que falham (ficha do RF07).
+            erros = {}
+            for lote in abertos:
+                if lote.id not in quantidades:
+                    erros[lote.id] = "Indique o vendido e o desperdiçado."
+                    continue
+                try:
+                    lote.fechar(*quantidades[lote.id])      # RN10
+                except DadosLoteInvalidos as erro:
+                    erros[lote.id] = str(erro)
+            if erros:
+                # Sai da transação com erro: nada é gravado.
+                raise FechoInvalido(erros)
+
+            for lote in abertos:
+                self.lotes.fechar(lote)
+        return abertos
