@@ -50,7 +50,7 @@ def novo():
         # Sugere a data e a hora atuais: o lote regista-se no arranque da
         # produção, para o stock descer logo e mostrar o real.
         # Continua editável. Formato do datetime-local.
-        # [MDN, input type="datetime-local"][MDN, input type="datetime-local"]
+        # [MDN, input type="datetime-local"]
         dados["data_hora_producao"] = datetime.now().strftime(
             "%Y-%m-%dT%H:%M")
     # Id escolhido, já como int, para o template marcar a opção (como #41).
