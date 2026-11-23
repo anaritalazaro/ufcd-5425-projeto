@@ -18,6 +18,18 @@ class LoteJaRegistado(DadosLoteInvalidos):
         super().__init__(f"O lote {codigo_lote} já foi registado.")
 
 
+class FechoInvalido(DadosLoteInvalidos):
+    """RF07: um ou mais lotes do dia têm quantidades inválidas; nada foi
+    gravado."""
+
+    def __init__(self, erros: dict[int, str]):
+        # id do lote -> mensagem, para a página assinalar cada lote
+        # (ficha do RF07, Sprint 2, 6.3) [Prop].
+        self.erros = erros
+        super().__init__(
+            "O dia não foi fechado. Corrija os lotes assinalados.")
+
+
 class StockInsuficiente(DadosLoteInvalidos):
     """RF04: falta stock de uma ou mais matérias-primas; nada foi gravado."""
 
@@ -132,7 +144,29 @@ class Lote:
         """
         return f"P{id_produto:03d}-{data_hora_producao:%Y%m%d-%H%M}"
 
-    # Só getters: os dados do lote não se alteram depois de criados (o fecho, RF07, entra depois).
+    def fechar(self, qtd_vendida: int, qtd_desperdicada: int) -> None:
+        """RF07, RN10: regista o vendido e o desperdiçado e fecha o lote."""
+        # Só um lote aberto se fecha (RN13): não se fecha duas vezes.
+        if self._estado != "aberto":
+            raise DadosLoteInvalidos(
+                f"O lote {self._codigo_lote} já está {self._estado}.")
+        # type() e não isinstance(): True e False não passam por inteiros.
+        if type(qtd_vendida) is not int or type(qtd_desperdicada) is not int:
+            raise TypeError(
+                "O vendido e o desperdiçado têm de ser inteiros.")
+        if qtd_vendida < 0 or qtd_desperdicada < 0:
+            raise DadosLoteInvalidos(
+                "O vendido e o desperdiçado não podem ser negativos.")
+        # RN10, ck_lote_fecho: produzido = vendido + desperdiçado.
+        if qtd_vendida + qtd_desperdicada != self._qtd_produzida:
+            raise DadosLoteInvalidos(
+                "Vendido + desperdiçado tem de ser igual ao produzido "
+                f"({self._qtd_produzida}).")
+        self._qtd_vendida = qtd_vendida
+        self._qtd_desperdicada = qtd_desperdicada
+        self._estado = "fechado"
+
+    # Só getters: só o fechar() altera o lote, e só uma vez (RF07, RN13).
     @property
     def id_produto(self) -> int: return self._id_produto
     @property

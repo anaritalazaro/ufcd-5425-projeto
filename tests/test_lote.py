@@ -3,7 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from domain.lote import DadosLoteInvalidos, Lote, StockInsuficiente
+from domain.lote import (DadosLoteInvalidos, FechoInvalido, Lote,
+                          StockInsuficiente)
 from domain.produto import Produto
 
 PRODUCAO = datetime(2026, 11, 20, 9, 30)
@@ -81,3 +82,40 @@ def test_stock_insuficiente_indica_todas_as_faltas():
                               ("Ovos", Decimal("3.000"), "un")])
     assert len(erro.faltas) == 2
     assert "Farinha T65" in str(erro) and "Ovos" in str(erro)
+
+
+def test_fechar_regista_quantidades_e_estado():
+    lote = Lote(**dados())
+    lote.fechar(52, 8)                     # 52 + 8 = 60 produzidos (RN10)
+    assert (lote.qtd_vendida, lote.qtd_desperdicada) == (52, 8)
+    assert lote.estado == "fechado"
+
+
+@pytest.mark.parametrize("vendida, desperdicada", [
+    (50, 5),     # soma diferente do produzido (RN10)
+    (70, -10),   # negativo, mesmo com a soma certa
+])
+def test_fechar_recusa_quantidades_invalidas(vendida, desperdicada):
+    lote = Lote(**dados())
+    with pytest.raises(DadosLoteInvalidos):
+        lote.fechar(vendida, desperdicada)
+    assert lote.estado == "aberto"         # nada mudou
+
+
+def test_fechar_recusa_tipo_errado():
+    with pytest.raises(TypeError):
+        Lote(**dados()).fechar("52", 8)
+
+
+def test_fechar_recusa_lote_ja_fechado():
+    lote = Lote(**dados())
+    lote.fechar(60, 0)
+    with pytest.raises(DadosLoteInvalidos, match="já está fechado"):
+        lote.fechar(60, 0)
+
+
+def test_fecho_invalido_guarda_os_erros_por_lote():
+    erro = FechoInvalido({3: "Vendido + desperdiçado tem de ser igual "
+                             "ao produzido (60)."})
+    assert 3 in erro.erros
+    assert isinstance(erro, DadosLoteInvalidos)
