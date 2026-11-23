@@ -89,6 +89,16 @@ python -m pytest
 
 Os testes verificam as classes e as regras do domínio e não precisam da base de dados.
 
+**5. Dados de demonstração (opcional)**
+
+Com a base de dados a correr e o `.venv` ativo:
+
+```powershell
+python dados_demonstracao.py
+```
+
+Cria 9 matérias-primas com stock inicial, 3 produtos e as respetivas receitas. Pode correr mais do que uma vez: o que já existe não é criado outra vez. Os ovos estão em gramas (gemas e ovo inteiro pasteurizados); a "Canela em pó" fica abaixo do stock mínimo, para mostrar o aviso.
+
 Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/resolucao-problemas.md). As decisões sobre a porta e a versão estão em [docs/decisoes.md](docs/decisoes.md).
  
 ## Estrutura dos ficheiros
@@ -104,6 +114,7 @@ Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/res
 - `config.py` — configuração lida do ambiente (.env)
 - `database.py` — abertura da ligação ao PostgreSQL
 - `main.py` — create_app(): cria a aplicação Flask
+- `dados_demonstracao.py` — dados de demonstração (matérias-primas, produtos e receitas)
 - `requirements.txt` — dependências Python
 - `domain/` — classes e regras do problema
 - `repositories/` —  acesso aos dados (SQL parametrizado)
