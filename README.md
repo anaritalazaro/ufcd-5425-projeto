@@ -6,23 +6,40 @@ Aplicação web em Python desenvolvida no âmbito da UFCD 5425 – Projeto de te
  
 O Fornada · Sobra Zero é uma aplicação para planear e registar a produção diária de uma pastelaria com fabrico próprio. Numa pastelaria, a quantidade a produzir decide-se muitas vezes a olho: produzir a mais gera desperdício e produzir a menos faz perder vendas. A aplicação junta num só sítio o que se planeia, o que se produz, as matérias-primas gastas, as temperaturas das vitrines e câmaras e o que, ao fecho, se vendeu ou deitou fora.
  
-## Funcionalidades previstas
+## Funcionalidades implementadas
 
-**Núcleo (primeira versão):**
- 
-- Gestão de produtos, matérias-primas e receitas
-- Entrada e ajuste de stock das matérias-primas
-- Registo da produção de um lote, com consumo automático das matérias-primas
-- Fecho do dia com as quantidades vendidas e desperdiçadas
+O núcleo da primeira versão: receita → produção do lote → consumo das matérias-primas → fecho com vendido e desperdiçado.
 
-**Fases seguintes, só depois de o núcleo estar a funcionar:**
+| Página | Endereço | O que faz |
+| --- | --- | --- |
+| Produtos | `/produtos/` e `/produtos/novo` | Listar e criar produtos (nome único, preço, validade, conservação, rendimento do lote) |
+| Matérias-primas | `/materias-primas/` e `/materias-primas/nova` | Listar e criar matérias-primas; aviso das que estão abaixo do stock mínimo |
+| Entrada de stock | `/materias-primas/entrada` | Registar uma entrada; o movimento e o stock gravam-se na mesma transação |
+| Registo do lote | `/lotes/novo` | Registar a produção de um lote: calcula o consumo pela receita, bloqueia e verifica o stock de todas as matérias-primas e só depois grava (tudo ou nada); se faltar stock, indica todas as faltas |
+| Lotes do dia e fecho do dia | `/lotes/fecho` | Ver os lotes de um dia e fechá-lo com o vendido e o desperdiçado de cada lote (produzido = vendido + desperdiçado); tudo ou nada, com os lotes com erro assinalados e o resumo do dia |
+| Estado | `/estado` | Verificar a ligação à base de dados |
+
+As receitas são criadas pelo script de dados de demonstração (passo 5), através do mesmo serviço que uma página usaria.
+
+## Limitações conhecidas e evolução futura
+
+**Nesta versão:**
+
+- As receitas não têm páginas: são criadas pelo script de dados de demonstração.
+- O ajuste de stock por contagem física existe no domínio, mas ainda não tem página.
+- Os produtos não se editam nem desativam pelas páginas (issue #25).
+- Os lotes do dia consultam-se só por data (sem filtros por produto e estado), e o dia fecha-se de uma vez, não lote a lote.
+- O consumo é proporcional à produção, por isso pode ter casas decimais; as matérias-primas contadas à unidade (`un`) não são arredondadas para inteiros. Nos dados de demonstração, os ovos estão em gramas.
+- O formato das datas no formulário segue a língua do navegador (dd/mm/aaaa num navegador em português).
+
+
+**Fases seguintes:**
  
 1. Plano do dia e cálculo antecipado das necessidades
 2. Registo das temperaturas dos equipamentos e sinalização das ocorrências
-3. Segurança: validação completa, tratamento de erros e proteção dos formulários
-4. Autenticação, acesso por várias pessoas e perfis de utilizador
-5. Rejeição automática de lotes por temperatura
-6. Melhorias visuais (CSS)
+3. Segurança: autenticação, acesso por várias pessoas e perfis de utilizador, proteção dos formulários
+4. Rejeição automática de lotes por temperatura
+5. Melhorias visuais (CSS)
 
 ## Tecnologias
  
@@ -30,6 +47,7 @@ O Fornada · Sobra Zero é uma aplicação para planear e registar a produção 
 - PostgreSQL 18 (em Docker), com o psycopg 3
 - Docker Desktop (Docker Compose)
 - pytest
+- python-dotenv (leitura do `.env`)
 
 ## Executar
 
@@ -87,7 +105,7 @@ Com o `.venv` ativo:
 python -m pytest
 ```
 
-Os testes verificam as classes e as regras do domínio e não precisam da base de dados.
+Os 98 testes verificam as classes e as regras do domínio e a conversão dos campos dos formulários. Não precisam da base de dados.
 
 **5. Dados de demonstração (opcional)**
 
@@ -122,6 +140,8 @@ Resolução de problemas do ambiente: ver [docs/resolucao-problemas.md](docs/res
 - `web/`  — rotas Flask (blueprints)
 - `templates/` — páginas HTML (Jinja2)
 - `tests/` — testes automáticos (pytest)
+- `LICENSE` — licença (todos os direitos reservados)
+- `docs/entregas/` — entrega inicial da UFCD 5425 e Sprint 4 da UFCD 10790, que reúne os Sprints 1 a 4 com as secções originais (requisitos, dicionário de dados, diagrama de classes); as referências a «Sprint 2» e «Sprint 3» no código remetem para essas partes
 
 
 ## Autoria
