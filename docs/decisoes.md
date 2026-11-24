@@ -145,7 +145,7 @@ A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`),
 
 **Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
 
-**Ligações.** A aplicação e o pgAdmin ligam-se a `127.0.0.1:5433`, com as credenciais do `.env` (`POSTGRES_HOST=127.0.0.1`,`POSTGRES_PORT=5433`). Com `localhost`, cada ligação demorava alguns segundos no Windows (ver `resolucao-problemas.md`).
+**Ligações.** A aplicação e o pgAdmin ligam-se a `127.0.0.1:5433`, com as credenciais do `.env` (`POSTGRES_HOST=127.0.0.1`, `POSTGRES_PORT=5433`). Com `localhost`, cada ligação demorava alguns segundos no Windows (ver `resolucao-problemas.md`).
 
 **Estrutura.** As pastas seguem as responsabilidades da sebenta da UFCD 5425 (secção 4.1), mas ficam na raiz do projeto, sem `src/`, e as dependências estão em `requirements.txt`. A organização das camadas é a mesma; a diferença está só na forma de instalar o projeto.
 
@@ -214,7 +214,7 @@ Evolução futura: quando houver dados reais, as alterações à estrutura passa
 
 A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property`), com as regras da tabela `produto` do `schema.sql`: `TypeError` para um tipo errado e `DadosProdutoInvalidos`, subclasse de `ValueError`, para um valor inválido. A unicidade do nome não é verificada na classe, porque depende dos produtos guardados (sebenta 5425, secção 6.3); fica para o serviço e para o `UNIQUE` da base de dados (secção 9.2).
 
-**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, ficou para depois da revisão do PR #17, para não alterar o que estava em revisão. A revisão foi feita a 16/11; por falta de tempo, a correção fica como evolução futura, junto com o CHECK de `equipamento.tipo`e o índice em`movimento_stock.id_lote`sugerido pelo formador.
+**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, ficou para depois da revisão do PR #17, para não alterar o que estava em revisão. A revisão foi feita a 16/11; por falta de tempo, a correção fica como evolução futura, junto com o CHECK de `equipamento.tipo` e o índice em `movimento_stock.id_lote` sugerido pelo formador.
 
 ## 14. Receitas e lotes
 
