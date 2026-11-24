@@ -7,7 +7,8 @@ from domain.movimento_stock import DadosMovimentoInvalidos
 
 
 def dados(**alteracoes):
-    base = {"nome": "Farinha T65", "unidade": "g", "custo_unitario": Decimal("0.00085"),
+    base = {"nome": "Farinha T65", "unidade": "g",
+            "custo_unitario": Decimal("0.00085"),
             "stock_minimo": Decimal("5000")}
     base.update(alteracoes)
     return base
@@ -25,7 +26,8 @@ def test_alergenios_vazio_fica_none():
 
 
 @pytest.mark.parametrize("campo, valor", [
-    ("unidade", None), ("custo_unitario", 0.5), ("stock_minimo", 10), ("ativo", 1),
+    ("unidade", None), ("custo_unitario", 0.5), ("stock_minimo", 10),
+    ("ativo", 1),
 ])
 def test_tipo_errado_da_type_error(campo, valor):
     with pytest.raises(TypeError):
@@ -83,3 +85,21 @@ def test_consumo_sem_stock_e_recusado_e_mantem_o_stock():
     with pytest.raises(DadosMateriaPrimaInvalidos):
         materia.registar_consumo(Decimal("100.001"), id_lote=1)
     assert materia.stock_atual == Decimal("100.000")
+
+
+def test_nova_comeca_com_stock_zero_ativa_e_sem_id():
+    materia = MateriaPrima.nova(**dados())
+    assert materia.stock_atual == Decimal("0.000")
+    assert materia.ativo is True
+    assert materia.id is None
+
+
+def test_nova_nao_aceita_stock_atual():
+    # O stock só entra por um movimento de entrada (D-02).
+    with pytest.raises(TypeError):
+        MateriaPrima.nova(**dados(stock_atual=Decimal("100")))
+
+
+def test_nova_valida_como_o_construtor():
+    with pytest.raises(DadosMateriaPrimaInvalidos):
+        MateriaPrima.nova(**dados(unidade="kg"))

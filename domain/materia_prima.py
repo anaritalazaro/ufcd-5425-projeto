@@ -21,8 +21,12 @@ class NomeMateriaPrimaDuplicado(DadosMateriaPrimaInvalidos):
 
 
 class MateriaPrima:
-    def __init__(self, *, nome, unidade, custo_unitario, stock_minimo=Decimal("0"),
-                 stock_atual=Decimal("0"), alergenios=None, ativo=True, id=None):
+    """Matéria-prima. O __init__ reconstrói uma matéria-prima lida da base
+    de dados; uma nova cria-se com MateriaPrima.nova()."""
+
+    def __init__(self, *, nome, unidade, custo_unitario,
+                 stock_minimo=Decimal("0"), stock_atual=Decimal("0"),
+                 alergenios=None, ativo=True, id=None):
         self.id = id
         self.nome = nome
         self.unidade = unidade
@@ -32,7 +36,18 @@ class MateriaPrima:
         self.ativo = ativo
         # stock_atual não tem setter: só muda através de um movimento (D-02).
         self._stock_atual = decimal_validado(stock_atual, "stock_atual", 3,
-                                             MAX_QUANTIDADE, DadosMateriaPrimaInvalidos)
+                                             MAX_QUANTIDADE,
+                                             DadosMateriaPrimaInvalidos)
+
+    # Construtor alternativo (UFCD 10794), como o Lote.novo(): sem stock_atual,
+    # ativo nem id. Uma matéria-prima nova começa com stock 0, e o stock
+    # inicial entra como movimento (RF02, D-02). Revisão do PR #27, ponto 1.
+    @classmethod
+    def nova(cls, *, nome, unidade, custo_unitario,
+             stock_minimo=Decimal("0"), alergenios=None) -> "MateriaPrima":
+        """Cria uma matéria-prima nova, ativa, com stock 0."""
+        return cls(nome=nome, unidade=unidade, custo_unitario=custo_unitario,
+                   stock_minimo=stock_minimo, alergenios=alergenios)
 
     @property
     def nome(self) -> str:
@@ -128,7 +143,7 @@ class MateriaPrima:
     def registar_consumo(self, quantidade: Decimal, id_lote: int) -> MovimentoStock:
         """RF04: cria o movimento de consumo do lote e desconta-o do stock.
 
-        Faz o mesmo que o registar_entrada(), no sentido oposto [Prop]: a entrada soma, 
+        Faz o mesmo que o registar_entrada(), no sentido oposto [Prop]: a entrada soma,
         o consumo subtrai e precisa do lote. O stock só muda através de um movimento (D-02).
         O serviço do lote já verificou todas as matérias-primas; o tem_stock() é a rede de
         segurança do domínio (RN05).
