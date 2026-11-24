@@ -47,7 +47,7 @@ As compras ficam fora do sistema. O stock é registado numa única tabela de mov
 
 **Entrada de stock (Sessão 15).** Uma matéria-prima nova começa com stock 0; o stock inicial regista-se como uma entrada, para que todo o stock tenha um movimento. O movimento e o stock gravam-se na mesma transação; o stock atualiza-se com `stock_atual = stock_atual + quantidade`, que não perde entradas simultâneas sem precisar de bloquear a linha. O bloqueio (`FOR UPDATE`) fica para o registo do lote, que lê o stock antes de o descontar (ver *Registo do lote*, abaixo).
 
-**Registo do lote (Sessão 16).** O lote, os movimentos de consumo e os descontos no stock gravam-se numa só transação, em três passos: ler e bloquear cada matéria-prima da receita com `SELECT ... FOR UPDATE`; verificar o stock de todas; e só depois gravar. Se faltar alguma, nada é gravado, e a mensagem indica todas as que faltam, com a quantidade em falta. As matérias-primas são bloqueadas sempre pela ordem do id (a receita é lida com `ORDER BY id_materia_prima`), para que duas transações não fiquem à espera uma da outra (*deadlock*). O `FOR UPDATE` foi sugerido pelo formador da UFCD 10790; a ordem dos três passos e o bloqueio pela ordem do id são propostas, já enviadas ao formador e ainda por confirmar. Fonte: PostgreSQL 18, *Explicit Locking*.
+**Registo do lote (Sessão 16).** O lote, os movimentos de consumo e os descontos no stock gravam-se numa só transação, em três passos: ler e bloquear cada matéria-prima da receita com `SELECT ... FOR UPDATE`; verificar o stock de todas; e só depois gravar. Se faltar alguma, nada é gravado, e a mensagem indica todas as que faltam, com a quantidade em falta. As matérias-primas são bloqueadas sempre pela ordem do id (a receita é lida com `ORDER BY id_materia_prima`), para que duas transações não fiquem à espera uma da outra (*deadlock*). O `FOR UPDATE` foi sugerido pelo formador da UFCD 10790; a ordem dos três passos e o bloqueio pela ordem do id foram confirmados pelo formador da UFCD 5425 a 22/11. Fonte: PostgreSQL 18, *Explicit Locking*.
 
 ## 3. Receitas e quantidades
  
@@ -145,7 +145,7 @@ A porta é publicada só no endereço do próprio computador (`127.0.0.1:5433`),
 
 **Credenciais.** O `docker-compose.yml` lê as credenciais do `.env` (`${POSTGRES_DB}`, `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`) e só contém os nomes das variáveis; o `.env` é ignorado pelo Git. A imagem do PostgreSQL usa estes valores apenas no primeiro arranque, para criar a base de dados e o utilizador.
 
-**Ligações.** A aplicação e o pgAdmin ligam-se a `127.0.0.1:5433` , com as credenciais do `.env` (`POSTGRES_HOST=127.0.0.1`,`POSTGRES_PORT=5433`). Com `localhost`, cada ligação demorava alguns segundos no Windows (ver `resolucao-problemas.md`).
+**Ligações.** A aplicação e o pgAdmin ligam-se a `127.0.0.1:5433`, com as credenciais do `.env` (`POSTGRES_HOST=127.0.0.1`,`POSTGRES_PORT=5433`). Com `localhost`, cada ligação demorava alguns segundos no Windows (ver `resolucao-problemas.md`).
 
 **Estrutura.** As pastas seguem as responsabilidades da sebenta da UFCD 5425 (secção 4.1), mas ficam na raiz do projeto, sem `src/`, e as dependências estão em `requirements.txt`. A organização das camadas é a mesma; a diferença está só na forma de instalar o projeto.
 
@@ -214,7 +214,7 @@ Evolução futura: quando houver dados reais, as alterações à estrutura passa
 
 A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property`), com as regras da tabela `produto` do `schema.sql`: `TypeError` para um tipo errado e `DadosProdutoInvalidos`, subclasse de `ValueError`, para um valor inválido. A unicidade do nome não é verificada na classe, porque depende dos produtos guardados (sebenta 5425, secção 6.3); fica para o serviço e para o `UNIQUE` da base de dados (secção 9.2).
 
-**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, ficou para depois da revisão do PR #17, para não alterar o que estava em revisão. A revisão foi feita a 16/11; a correção está planeada para a v1.0, junto com o CHECK de `equipamento.tipo`.
+**Diferença por resolver.** A classe recusa uma categoria vazia, porque o dicionário de dados a marca como obrigatória e a análise de dados agrupa os produtos por categoria. O `schema.sql` só tem `NOT NULL`, que aceita um texto vazio. A sebenta pede que as regras do Python e do SQL se mantenham coerentes (secção 7.3). A correção, `CONSTRAINT ck_produto_categoria CHECK(length(trim(categoria)) > 0)`, ficou para depois da revisão do PR #17, para não alterar o que estava em revisão. A revisão foi feita a 16/11; por falta de tempo, a correção fica como evolução futura, junto com o CHECK de `equipamento.tipo`e o índice em`movimento_stock.id_lote`sugerido pelo formador.
 
 ## 14. Receitas e lotes
 
@@ -227,3 +227,15 @@ A classe `Produto` (`domain/produto.py`) valida os dados nos setters (`@property
 **`Lote.novo()`.** É um construtor alternativo (`@classmethod`) para um lote novo: calcula o código e a validade (RN08) e recusa um produto inativo (RN11). O `__init__` serve para reconstruir um lote lido da base de dados. A recusa do produto inativo estava prevista no serviço; passou para o domínio para ficar num só sítio e ser testada sem base de dados.
 
 **`MateriaPrima.registar_consumo()`.** Não está no diagrama de classes v2: é uma proposta, que será acrescentada ao diagrama como `registar_consumo(qtd, lote) «RN05»`. Faz o mesmo que o `registar_entrada()`, no sentido oposto: subtrai, precisa do lote e verifica o stock. Sem ele, o serviço teria de alterar o `_stock_atual` de fora da classe (contra a D-02) ou deixar o objeto com o stock desatualizado (ponto 4 da revisão do PR #27).
+
+## 15. Formulários, fecho do dia e dados de demonstração (Sessões 17 a 19)
+
+**Conversão dos formulários.** O texto dos formulários é convertido na camada web, em `web/formularios.py` (`para_decimal()`, `para_inteiro()`, `para_data()`, `para_data_hora()`), que lança `CampoInvalido(ValueError)`. O domínio recebe sempre valores com o tipo certo e só aplica as regras (sebenta 5425, secção 10.1). Segue o ponto 7 da revisão do PR #27, na opção da camada web; o segundo argumento é a frase inteira da mensagem, e não só o rótulo, por causa do menu da entrada de stock («Escolha uma matéria-prima.»).
+
+**Registo do lote no arranque da produção.** Regra da pastelaria: o lote regista-se quando a produção arranca, para que o desconto das matérias-primas seja imediato e o stock mostrado seja o real. Por isso, o campo da data e hora vem preenchido com a hora atual e continua editável. O movimento de consumo fica com a hora do registo; com esta regra, coincide com a hora da produção (ponto 3 da revisão do PR #27).
+
+**`MateriaPrima.nova()`.** Construtor alternativo para uma matéria-prima nova, sem `stock_atual`, `ativo` nem `id`: o stock começa a 0 e só entra por um movimento de entrada. O `__init__` continua a reconstruir a partir da base de dados. É uma alternativa à sugestão do formador (`desde_bd()`, ponto 1 da revisão do PR #27), para seguir o mesmo padrão do `Lote.novo()` e para que nenhum caminho salte validações.
+
+**Fecho do dia (RF07, RN10, RF15).** Uma só página mostra os lotes de um dia e fecha-o. O serviço bloqueia os lotes do dia com `FOR UPDATE`, valida todos com `Lote.fechar()` e só grava se não houver erros (tudo ou nada); os lotes com erro ficam assinalados. Os filtros por produto e estado do RF15 e o fecho lote a lote ficam como evolução futura.
+
+**Dados de demonstração.** O script `dados_demonstracao.py` usa os serviços, e não SQL direto, para passar pelas mesmas validações e para que o stock inicial entre como movimento. Os ovos registam-se em gramas: o consumo é proporcional à produção (RN04) e daria frações de ovo. Arredondar para inteiros o consumo das matérias-primas em `un` fica como evolução futura.
