@@ -145,6 +145,8 @@ class MateriaPrima:
 
         Faz o mesmo que o registar_entrada(), no sentido oposto [Prop]: a entrada soma,
         o consumo subtrai e precisa do lote. O stock só muda através de um movimento (D-02).
+        O movimento devolvido é gravado pelo serviço do lote, na mesma
+        transação que o lote e o stock, como no registar_entrada() (D-02).
         O serviço do lote já verificou todas as matérias-primas; o tem_stock() é a rede de
         segurança do domínio (RN05).
         """
