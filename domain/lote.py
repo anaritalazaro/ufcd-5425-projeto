@@ -15,7 +15,12 @@ class LoteJaRegistado(DadosLoteInvalidos):
     """Já existe um lote com este código (RN06, UNIQUE da coluna lote)."""
 
     def __init__(self, codigo_lote: str):
-        super().__init__(f"O lote {codigo_lote} já foi registado.")
+        # O código vai até ao minuto, como o campo datetime-local (J-06):
+        # dois lotes do mesmo produto no mesmo minuto têm o mesmo código.
+        super().__init__(
+            "Já existe um lote deste produto registado neste minuto "
+            f"(código {codigo_lote}). Se não for repetido, registe-o no "
+            "minuto seguinte.")
 
 
 class FechoInvalido(DadosLoteInvalidos):
@@ -124,6 +129,8 @@ class Lote:
             codigo_lote=cls.gerar_codigo(produto.id, data_hora_producao),
             data_hora_producao=data_hora_producao,
             turno=turno,
+            # A qtd_planeada fica para o plano do dia (RF08, fase 1): a ficha
+            # do RF04 não a pede, por isso a página do lote não a envia.
             qtd_planeada=qtd_planeada,
             qtd_produzida=qtd_produzida,
             validade=cls.calcular_validade(data_hora_producao, produto.validade_horas),
