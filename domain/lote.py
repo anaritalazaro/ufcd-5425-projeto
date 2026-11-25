@@ -15,8 +15,10 @@ class LoteJaRegistado(DadosLoteInvalidos):
     """Já existe um lote com este código (RN06, UNIQUE da coluna lote)."""
 
     def __init__(self, codigo_lote: str):
-        # O código vai até ao minuto, como o campo datetime-local (J-06):
+        # O código vai até ao minuto, como o campo datetime-local:
         # dois lotes do mesmo produto no mesmo minuto têm o mesmo código.
+        # A mensagem diz o que está errado e como corrigir (revisão do
+        # PR #38) [W3C, WCAG 2.1, critérios 3.3.1 e 3.3.3].
         super().__init__(
             "Já existe um lote deste produto registado neste minuto "
             f"(código {codigo_lote}). Se não for repetido, registe-o no "
