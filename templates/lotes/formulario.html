@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Registar lote · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Registar lote de produção</h1>
+  {% if faltas %}
+  <p><strong>Stock insuficiente. O lote não foi registado. Faltam:</strong></p>
+  <ul>
+    {% for nome, quantidade, unidade in faltas %}
+    <li>{{ nome }}: {{ quantidade|string|replace(".", ",") }} {{ unidade }}</li>
+    {% endfor %}
+  </ul>
+  {% elif erro %}<p><strong>{{ erro }}</strong></p>{% endif %}
+  {% if produtos %}
+  <form method="post">
+    <p><label>Produto
+      <select name="id_produto">
+        {% for produto in produtos if produto.ativo %}
+        <option value="{{ produto.id }}" {% if produto.id == id_escolhido %}selected{% endif %}>{{ produto.nome }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>Quantidade produzida <input name="qtd_produzida" value="{{ dados.qtd_produzida }}" inputmode="numeric" required></label></p>
+    <p><label>Data e hora de produção <input type="datetime-local" name="data_hora_producao" value="{{ dados.data_hora_producao }}" required></label></p>
+    <p><label>Turno
+      <select name="turno">
+        {% for turno in turnos %}
+        <option value="{{ turno }}" {% if turno == dados.turno %}selected{% endif %}>{{ turno }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><button type="submit">Registar lote</button> <a href="{{ url_for('inicio.index') }}">Cancelar</a></p>
+  </form>
+  {% elif not erro %}
+  <p>Primeiro crie um <a href="{{ url_for('produtos.novo') }}">produto</a>.</p>
+  {% endif %}
+</body>
+</html>

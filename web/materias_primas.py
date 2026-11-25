@@ -1,8 +1,5 @@
 """Rotas das matérias-primas: listar, criar e registar uma entrada de stock (RF02). Sem SQL (RNF01)."""
 
-# InvalidOperation é a exceção que o Decimal("abc") lança quando o texto não é um número
-from decimal import Decimal, InvalidOperation   
-
 # A partir do Flask, uso dos equivalentes do FastAPI [sebenta 5425, seccao 10]
 from flask import Blueprint, current_app, redirect, render_template, request, url_for
 
@@ -13,6 +10,7 @@ from domain.movimento_stock import DadosMovimentoInvalidos
 from repositories.materia_prima_repository import MateriaPrimaRepository
 from repositories.movimento_stock_repository import MovimentoStockRepository
 from services.materia_prima_service import MateriaPrimaService
+from web.formularios import CampoInvalido, para_decimal, para_inteiro
 
 # "materias_primas": nome interno, usado no url_for("materias_primas.lista").
 # url_prefix: início comum dos endereços; @bp.route("/nova") passa a /materias-primas/nova.
@@ -26,15 +24,6 @@ def construir_servico(conn) -> MateriaPrimaService:
     """Constrói o serviço com os dois repositórios, sobre a mesma ligação [Sebenta 5425, 10.2]."""
     # A mesma ligação nos dois repositórios põe o movimento e o stock na mesma transação (D-02)
     return MateriaPrimaService(conn, MateriaPrimaRepository(conn), MovimentoStockRepository(conn))
-
-
-def decimal_do_formulario(texto: str | None, rotulo: str) -> Decimal:
-    """Converte um número escrito no formulário (com vírgula ou ponto) em Decimal."""
-    try:
-        # texto or "": campo em falta passa a vazio; strip() tira os espaços; vírgula passa a ponto
-        return Decimal((texto or "").strip().replace(",", "."))
-    except InvalidOperation:
-        raise DadosMateriaPrimaInvalidos(f"{rotulo} tem de ser um número.") from None
 
 
 def sem_ligacao(erro, template: str, **contexto):
@@ -75,8 +64,12 @@ def nova():
         valores = {
             "nome": dados.get("nome", ""),
             "unidade": dados.get("unidade", ""),
-            "custo_unitario": decimal_do_formulario(dados.get("custo_unitario"), "O custo unitário"),
-            "stock_minimo": decimal_do_formulario(dados.get("stock_minimo") or "0", "O stock mínimo"),
+            "custo_unitario": para_decimal(
+                dados.get("custo_unitario"),
+                "O custo unitário tem de ser um número."),
+            "stock_minimo": para_decimal(
+                dados.get("stock_minimo") or "0",
+                "O stock mínimo tem de ser um número."),
             "alergenios": dados.get("alergenios"),
         }
         conn = abrir_ligacao(current_app.config["BD"])
@@ -84,9 +77,10 @@ def nova():
             construir_servico(conn).criar_materia_prima(**valores)
         finally:
             conn.close()
-    except DadosMateriaPrimaInvalidos as erro:
-        # Inclui o nome repetido (NomeMateriaPrimaDuplicado é subclasse).
-        # Devolve o formulário com a mensagem e os dados escritos. [Prop: 422]
+    except (DadosMateriaPrimaInvalidos, CampoInvalido) as erro:
+        # DadosMateriaPrimaInvalidos inclui o nome repetido (NomeMateriaPrima-
+        # Duplicado é subclasse); CampoInvalido vem da conversão.
+        # Devolve o formulário com a mensagem e os dados escritos [Prop: 422].
         return render_template("materias_primas/formulario.html", erro=str(erro), **contexto), 422
     except ErroLigacaoBD as erro:
         return sem_ligacao(erro, "materias_primas/formulario.html", **contexto)
@@ -97,7 +91,10 @@ def nova():
 def entrada():
     """GET mostra o formulário da entrada; POST regista a entrada de stock."""
     dados = request.form.to_dict()
-     # A ligação abre-se antes de distinguir GET e POST: os dois precisam da lista para o menu
+    # Id escolhido, já como int, para o template marcar a opção (#41).
+    id_escolhido = None
+    # A ligação abre-se antes de distinguir GET e POST: os dois precisam da
+    # lista para o menu
     try:
         conn = abrir_ligacao(current_app.config["BD"])
     except ErroLigacaoBD as erro:
@@ -106,21 +103,29 @@ def entrada():
         servico = construir_servico(conn)
         if request.method == "POST":
             try:
-                id_texto = dados.get("id_materia_prima", "")
-                if not id_texto.isdigit():
-                    raise DadosMateriaPrimaInvalidos("Escolha uma matéria-prima.")
-                quantidade = decimal_do_formulario(dados.get("quantidade"), "A quantidade")
-                servico.registar_entrada(int(id_texto), quantidade)
+                id_escolhido = para_inteiro(
+                    dados.get("id_materia_prima"),
+                    "Escolha uma matéria-prima.")
+                quantidade = para_decimal(
+                    dados.get("quantidade"),
+                    "A quantidade tem de ser um número.")
+                servico.registar_entrada(id_escolhido, quantidade)
                 return redirect(url_for("materias_primas.lista"))
-            # Um except pode apanhar várias exceções, entre parênteses: 
-            # a da matéria-prima (escolha, número) e a do movimento (quantidade 0, casas a mais)
-            except (DadosMateriaPrimaInvalidos, DadosMovimentoInvalidos) as erro:
+            # Um except pode apanhar várias exceções, entre parênteses:
+            # CampoInvalido (id ou quantidade que não são números), a da
+            # matéria-prima (não existe) e a do movimento (quantidade 0,
+            # casas a mais).
+            except (DadosMateriaPrimaInvalidos, DadosMovimentoInvalidos,
+                    CampoInvalido) as erro:
                 # A transação falhada já foi desfeita; a mesma ligação volta a listar [psycopg 3, Transactions]
                 return render_template("materias_primas/entrada.html",
                                        materias=servico.listar_materias_primas(),
-                                       dados=dados, erro=str(erro)), 422
+                                       dados=dados, id_escolhido=id_escolhido,
+                                       erro=str(erro)), 422
         return render_template("materias_primas/entrada.html",
-                               materias=servico.listar_materias_primas(), dados=dados, erro=None)
+                               materias=servico.listar_materias_primas(),
+                               dados=dados, id_escolhido=id_escolhido,
+                               erro=None)
     finally:
         # Fecha a ligação em qualquer caso: GET, POST com sucesso ou POST com erro
         conn.close()

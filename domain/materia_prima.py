@@ -21,8 +21,12 @@ class NomeMateriaPrimaDuplicado(DadosMateriaPrimaInvalidos):
 
 
 class MateriaPrima:
-    def __init__(self, *, nome, unidade, custo_unitario, stock_minimo=Decimal("0"),
-                 stock_atual=Decimal("0"), alergenios=None, ativo=True, id=None):
+    """Matéria-prima. O __init__ reconstrói uma matéria-prima lida da base
+    de dados; uma nova cria-se com MateriaPrima.nova()."""
+
+    def __init__(self, *, nome, unidade, custo_unitario,
+                 stock_minimo=Decimal("0"), stock_atual=Decimal("0"),
+                 alergenios=None, ativo=True, id=None):
         self.id = id
         self.nome = nome
         self.unidade = unidade
@@ -32,7 +36,18 @@ class MateriaPrima:
         self.ativo = ativo
         # stock_atual não tem setter: só muda através de um movimento (D-02).
         self._stock_atual = decimal_validado(stock_atual, "stock_atual", 3,
-                                             MAX_QUANTIDADE, DadosMateriaPrimaInvalidos)
+                                             MAX_QUANTIDADE,
+                                             DadosMateriaPrimaInvalidos)
+
+    # Construtor alternativo (UFCD 10794), como o Lote.novo(): sem stock_atual,
+    # ativo nem id. Uma matéria-prima nova começa com stock 0, e o stock
+    # inicial entra como movimento (RF02, D-02). Revisão do PR #27, ponto 1.
+    @classmethod
+    def nova(cls, *, nome, unidade, custo_unitario,
+             stock_minimo=Decimal("0"), alergenios=None) -> "MateriaPrima":
+        """Cria uma matéria-prima nova, ativa, com stock 0."""
+        return cls(nome=nome, unidade=unidade, custo_unitario=custo_unitario,
+                   stock_minimo=stock_minimo, alergenios=alergenios)
 
     @property
     def nome(self) -> str:
@@ -68,7 +83,7 @@ class MateriaPrima:
 
     @custo_unitario.setter
     def custo_unitario(self, valor) -> None:
-        # 6 casas: o custo é por g, ml ou un (sal a 0,000350 €/g). [Prop, validada no PR #17]
+        # 6 casas: o custo é por g, ml ou un (sal a 0,000350 €/g) [Prop, validada no PR #17].
         self._custo_unitario = decimal_validado(valor, "custo_unitario", 6, MAX_CUSTO,
                                                 DadosMateriaPrimaInvalidos)
 
@@ -122,6 +137,21 @@ class MateriaPrima:
     def registar_entrada(self, quantidade: Decimal) -> MovimentoStock:
         """Cria o movimento de entrada e aplica-o ao stock. Devolve o movimento a gravar."""
         movimento = MovimentoStock(id_materia_prima=self.id, tipo="entrada", quantidade=quantidade)
+        self._stock_atual = movimento.efeito_no_stock(self._stock_atual)
+        return movimento
+
+    def registar_consumo(self, quantidade: Decimal, id_lote: int) -> MovimentoStock:
+        """RF04: cria o movimento de consumo do lote e desconta-o do stock.
+
+        Faz o mesmo que o registar_entrada(), no sentido oposto [Prop]: a entrada soma,
+        o consumo subtrai e precisa do lote. O stock só muda através de um movimento (D-02).
+        O serviço do lote já verificou todas as matérias-primas; o tem_stock() é a rede de
+        segurança do domínio (RN05).
+        """
+        movimento = MovimentoStock(id_materia_prima=self.id, tipo="consumo",
+                                   quantidade=quantidade, id_lote=id_lote)
+        if not self.tem_stock(movimento.quantidade):
+            raise DadosMateriaPrimaInvalidos(f"Stock insuficiente de «{self.nome}».")
         self._stock_atual = movimento.efeito_no_stock(self._stock_atual)
         return movimento
 

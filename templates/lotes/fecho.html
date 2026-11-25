@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <title>Fecho do dia · Fornada · Sobra Zero</title>
+</head>
+<body>
+  <h1>Lotes do dia e fecho do dia</h1>
+  <form method="get">
+    <p><label>Dia <input type="date" name="dia" value="{{ dia.isoformat() }}"></label>
+      <button type="submit">Ver</button></p>
+  </form>
+  {% if erro %}<p><strong>{{ erro }}</strong></p>{% endif %}
+  {% if lotes %}
+  <form method="post">
+    <input type="hidden" name="dia" value="{{ dia.isoformat() }}">
+    <table>
+      <tr>
+        <th>Lote</th><th>Produto</th><th>Turno</th><th>Produzido</th>
+        <th>Vendido</th><th>Desperdiçado</th><th>Estado</th>
+      </tr>
+      {% for lote in lotes %}
+      <tr>
+        <td>{{ lote.codigo_lote }}</td>
+        <td>{{ nomes.get(lote.id_produto, "") }}</td>
+        <td>{{ lote.turno }}</td>
+        <td>{{ lote.qtd_produzida }}</td>
+        {% if lote.estado == "aberto" %}
+        <td><input name="vendido_{{ lote.id }}" value="{{ dados.get('vendido_' ~ lote.id, '') }}" inputmode="numeric" size="6" required></td>
+        <td><input name="desperdicado_{{ lote.id }}" value="{{ dados.get('desperdicado_' ~ lote.id, '') }}" inputmode="numeric" size="6" required></td>
+        {% else %}
+        <td>{{ lote.qtd_vendida if lote.qtd_vendida is not none else "" }}</td>
+        <td>{{ lote.qtd_desperdicada if lote.qtd_desperdicada is not none else "" }}</td>
+        {% endif %}
+        <td>{{ lote.estado }}</td>
+      </tr>
+      {% if erros.get(lote.id) %}
+      <tr><td colspan="7"><strong>{{ lote.codigo_lote }}: {{ erros[lote.id] }}</strong></td></tr>
+      {% endif %}
+      {% endfor %}
+    </table>
+    {% set fechados = lotes | selectattr("estado", "equalto", "fechado") | list %}
+    {% if fechados %}
+    <p>Resumo dos lotes fechados: produzido {{ fechados | sum(attribute="qtd_produzida") }},
+      vendido {{ fechados | sum(attribute="qtd_vendida") }},
+      desperdiçado {{ fechados | sum(attribute="qtd_desperdicada") }}.</p>
+    {% endif %}
+    {% if lotes | selectattr("estado", "equalto", "aberto") | list %}
+    <p><button type="submit">Fechar o dia</button></p>
+    {% endif %}
+  </form>
+  {% elif not erro %}
+  <p>Não há lotes neste dia. <a href="{{ url_for('lotes.novo') }}">Registar lote</a></p>
+  {% endif %}
+  <p><a href="{{ url_for('inicio.index') }}">Início</a></p>
+</body>
+</html>

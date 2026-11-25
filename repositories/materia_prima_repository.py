@@ -1,5 +1,7 @@
 """Acesso aos dados das matérias-primas."""
 
+from decimal import Decimal 
+
 import psycopg
 from psycopg import errors
 from psycopg.rows import dict_row
@@ -20,6 +22,10 @@ SQL_OBTER = """
     WHERE id_materia_prima = %s
 """
 
+# O mesmo SELECT com FOR UPDATE: a linha fica bloqueada até ao fim da transação (D-25).
+# [Prop; PostgreSQL, Explicit Locking: Row-Level Locks]
+SQL_OBTER_PARA_ATUALIZAR = SQL_OBTER + "    FOR UPDATE\n"
+
 # Sem stock_atual: uma matéria-prima nova começa com o DEFAULT 0; o stock inicial é uma entrada.
 SQL_CRIAR = """
     INSERT INTO materia_prima (nome, unidade, stock_minimo, custo_unitario, alergenios, ativo)
@@ -32,6 +38,7 @@ SQL_CRIAR = """
 SQL_SOMAR_STOCK = """
     UPDATE materia_prima SET stock_atual = stock_atual + %s
     WHERE id_materia_prima = %s
+    RETURNING stock_atual
 """
 
 
@@ -57,9 +64,12 @@ class MateriaPrimaRepository:
     def obter_para_atualizar(self, id_materia_prima: int) -> MateriaPrima | None:
         """RF04: lê a matéria-prima e bloqueia a linha até ao fim da transação (D-25).
 
-        Será SQL_OBTER com FOR UPDATE, chamado pelo serviço do lote dentro da transação.
+        Só tem efeito dentro de conn.transaction(): é o serviço do lote que a abre.
         """
-        raise NotImplementedError("Implementado no registo do lote (RF04).")
+        with self.conn.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(SQL_OBTER_PARA_ATUALIZAR, (id_materia_prima,))
+            linha = cursor.fetchone()
+        return MateriaPrima(**linha) if linha else None
 
     def existe_nome(self, nome: str) -> bool:
         """Diz se já existe uma matéria-prima com este nome (comparação exata)."""
@@ -85,6 +95,10 @@ class MateriaPrimaRepository:
         materia.id = linha[0]
         return materia
 
-    def somar_stock(self, id_materia_prima: int, quantidade) -> None:
-        """Soma a quantidade ao stock atual (negativa num consumo ou num ajuste negativo)."""
-        self.conn.execute(SQL_SOMAR_STOCK, (quantidade, id_materia_prima))
+    def somar_stock(self, id_materia_prima: int, quantidade) -> Decimal:
+        """Soma a quantidade ao stock atual (negativa num consumo ou num ajuste negativo).
+        Devolve o stock gravado, com o RETURNING (sugestão do formador no PR #27).
+        """
+        linha = self.conn.execute(
+            SQL_SOMAR_STOCK, (quantidade, id_materia_prima)).fetchone()
+        return linha[0]

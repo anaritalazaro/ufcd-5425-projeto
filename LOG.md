@@ -105,3 +105,35 @@
 
 - Matérias-primas e stock (RF02, #26, PR #27): classes `MateriaPrima` e `MovimentoStock` com 38 testes pytest (dois erros detetados e corrigidos pelos testes); repositórios e serviço, com a entrada de stock numa só transação; páginas para listar, criar e registar entradas, testadas no navegador
 - Ligação com `POSTGRES_HOST=127.0.0.1` em vez de `localhost` (no Windows, cada ligação demorava alguns segundos); ajuste de stock e `FOR UPDATE` (RF04) ficam para depois
+
+
+## Sessão 16 — 20 de novembro de 2026
+
+- PR #24 (produtos) integrado no `main`; revisão do formador ao PR #27, com os pontos 4 e 5 feitos nesta sessão e os restantes por fazer
+- Receitas (RF03, #32): `LinhaReceita` com `consumo_para()` (#33); `ReceitaRepository` e `ReceitaService` (#34), sem páginas
+- Registo do lote (RF04, #35): classe `Lote` e `MateriaPrima.registar_consumo()` (#36); `LoteService` com `FOR UPDATE` pela ordem do id e verificação do stock antes de gravar (#37); PR #38
+- 67 testes pytest (eram 48); lote verificado na base de dados do Docker (registo, lote repetido e stock insuficiente) e, numa base de dados temporária, com dois registos ao mesmo tempo: o segundo esperou pelo bloqueio e foi recusado por falta de stock
+- Decisões registadas em `docs/decisoes.md` (secções 2, 3 e 14)
+
+## Sessão 17 — 21 de novembro de 2026 (fora da aula)
+
+- Coerência do `decisoes.md` e do README (`5f2e153`, `bd2cdfa`): `FOR UPDATE` já implementado, `127.0.0.1`, `Lote.calcular_validade()`, versões nas tecnologias e secção "Correr os testes"
+- Issue #39 (ajustes da revisão do PR #27) dividida em sub-issues: #40, #41 e #42
+- #42: `web/formularios.py` com `para_decimal()`, `para_inteiro()` e a exceção `CampoInvalido`, usado nos produtos e nas matérias-primas; 12 testes novos (79) (`de09bd6`)
+- #41: id da matéria-prima como `int` na rota da entrada de stock, sem `|string` no template; corrige um erro 500 com o id "²" (`045340b`)
+
+## Sessão 18 — 23 de novembro de 2026 (fora da aula)
+
+- Resposta do formador (22/11): confirmada a transação do registo do lote (bloquear com `FOR UPDATE` pela ordem do id, verificar e só depois gravar)
+- Página do registo do lote (RF04), com `para_data_hora()`; fecha a #42 (`3f8e941`)
+- Fecho do dia (RF07, RN10, RF15): `Lote.fechar()` e `FechoInvalido`; lotes do dia e fecho numa só transação, tudo ou nada, com `FOR UPDATE` (`193244f`, `a22dc1e`); 95 testes
+- Regra da pastelaria: o lote regista-se no arranque da produção, com a hora atual sugerida no formulário (`d709966`, `430b755`)
+- Script de dados de demonstração `dados_demonstracao.py`, com os ovos em gramas; base de dados do Docker recriada e preenchida (`14031ed`)
+
+## Sessão 19 — 24 de novembro de 2026
+
+- #40: `MateriaPrima.nova()` para a criação, sem `stock_atual`; 98 testes (`6e4d717`). Issue #39 fechada com todos os pontos da revisão do PR #27 tratados
+- PR #38 com título e descrição atualizados e pedido de revisão ao formador
+- `docs/entregas/`: o Sprint 4 da UFCD 10790, que reúne os Sprints 1 a 4, substitui os Sprints 1 a 3 (`d228ab2`)
+- README final: funcionalidades implementadas, limitações conhecidas e evolução futura (`516d7b0`)
+- Repositório mantém-se público (licença de todos os direitos reservados)
